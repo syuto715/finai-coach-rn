@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
@@ -8,12 +8,11 @@ import {
   diagnosisRank,
   diagnosisType,
   diagnosisAdvice,
+  diagnosisRankColor,
 } from '../../src/utils/calculations';
 
-type Step = 'income' | 'rent' | 'saving' | 'subs' | 'fund' | 'result';
-
 const incomeOptions = [
-  { label: '〜20万', value: 200000 },
+  { label: '〜20万', value: 175000 },
   { label: '20〜30万', value: 250000 },
   { label: '30〜40万', value: 350000 },
   { label: '40〜50万', value: 450000 },
@@ -21,7 +20,7 @@ const incomeOptions = [
 ];
 
 const rentOptions = [
-  { label: '〜5万', value: 40000 },
+  { label: '〜5万', value: 35000 },
   { label: '5〜8万', value: 65000 },
   { label: '8〜12万', value: 100000 },
   { label: '12万〜', value: 140000 },
@@ -46,82 +45,80 @@ const fundOptions = [
   { label: '6ヶ月以上', value: '6+' as const },
 ];
 
+const questions = [
+  { title: '毎月の手取り収入は？', options: incomeOptions },
+  { title: '家賃・住宅ローンは月いくら？', options: rentOptions },
+  { title: '毎月貯金できていますか？', options: savingOptions },
+  { title: 'サブスクはいくつ入っていますか？', options: subsOptions },
+  { title: '生活防衛資金は生活費何ヶ月分ある？', options: fundOptions },
+];
+
 export default function DiagnosisScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('income');
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [income, setIncome] = useState(0);
   const [rent, setRent] = useState(0);
   const [saving, setSaving] = useState<'yes' | 'little' | 'no'>('little');
   const [subs, setSubs] = useState<'0-2' | '3-5' | '6+'>('0-2');
   const [fund, setFund] = useState<'<1' | '1-3' | '3-6' | '6+'>('<1');
+  const [showResult, setShowResult] = useState(false);
 
   const score = diagnosisScore(income, rent, saving, subs, fund);
   const rank = diagnosisRank(score);
   const type = diagnosisType(rank);
   const advice = diagnosisAdvice(rank);
+  const rankColor = diagnosisRankColor(rank);
 
-  const rankColor =
-    rank === 'S' ? Colors.scoreGreen :
-    rank === 'A' ? Colors.primaryLight :
-    rank === 'B' ? Colors.warning :
-    rank === 'C' ? Colors.scoreOrange :
-    Colors.scoreRed;
+  const handleSelect = useCallback((value: any, index: number) => {
+    setSelectedIndex(index);
+
+    // Store the answer
+    switch (currentQuestion) {
+      case 0: setIncome(value); break;
+      case 1: setRent(value); break;
+      case 2: setSaving(value); break;
+      case 3: setSubs(value); break;
+      case 4: setFund(value); break;
+    }
+
+    // Auto-advance after 0.5s
+    setTimeout(() => {
+      setSelectedIndex(null);
+      if (currentQuestion < 4) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        setShowResult(true);
+      }
+    }, 500);
+  }, [currentQuestion]);
 
   const handleFinish = async () => {
     const existing = await loadProfile();
     await saveProfile({
-      ...(existing ?? { nickname: '', createdAt: new Date().toISOString(), cashBalance: 0, monthlyExpenseTarget: 0, targetDefenseMonths: 3 }),
+      nickname: existing?.nickname ?? '',
       monthlyIncome: income,
       rent,
       savingAbility: saving,
       subscriptionCount: subs,
       defenseFundMonths: fund,
+      cashBalance: 0,
+      monthlyExpenseTarget: Math.round(income * 0.8),
+      targetDefenseMonths: 3,
       diagnosisRank: rank,
       diagnosisType: type,
       onboardingCompleted: true,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
     });
     router.replace('/(tabs)');
   };
 
-  const renderQuestion = (
-    title: string,
-    options: { label: string; value: any }[],
-    onSelect: (v: any) => void,
-    nextStep: Step,
-  ) => (
-    <View style={styles.questionContainer}>
-      <Text style={styles.questionTitle}>{title}</Text>
-      <View style={styles.options}>
-        {options.map((opt) => (
-          <Pressable
-            key={opt.label}
-            style={styles.optionButton}
-            onPress={() => {
-              onSelect(opt.value);
-              setStep(nextStep);
-            }}
-          >
-            <Text style={styles.optionText}>{opt.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-
-  if (step === 'result') {
+  if (showResult) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.resultContent}>
-        <Text style={styles.resultEmoji}>
-          {rank === 'S' ? '🏆' : rank === 'A' ? '⭐' : rank === 'B' ? '👍' : rank === 'C' ? '💪' : '🌱'}
-        </Text>
         <Text style={[styles.rankText, { color: rankColor }]}>{rank}</Text>
         <Text style={styles.typeText}>{type}</Text>
-        <Text style={styles.scoreLabel}>スコア: {score}/100</Text>
-
-        <View style={styles.adviceBox}>
-          <Text style={styles.adviceTitle}>まずやるべきこと</Text>
-          <Text style={styles.adviceText}>{advice}</Text>
-        </View>
+        <Text style={styles.adviceText}>{advice}</Text>
 
         <Pressable style={styles.startButton} onPress={handleFinish}>
           <Text style={styles.startButtonText}>始める</Text>
@@ -130,27 +127,47 @@ export default function DiagnosisScreen() {
     );
   }
 
+  const q = questions[currentQuestion];
+
   return (
     <View style={styles.container}>
+      {/* Progress dots */}
       <View style={styles.progress}>
-        {(['income', 'rent', 'saving', 'subs', 'fund'] as Step[]).map((s, i) => (
+        {questions.map((_, i) => (
           <View
-            key={s}
+            key={i}
             style={[
               styles.progressDot,
-              { backgroundColor: ['income', 'rent', 'saving', 'subs', 'fund'].indexOf(step) >= i
-                ? Colors.primary
-                : Colors.border },
+              { backgroundColor: currentQuestion >= i ? Colors.secondary : Colors.borderWarm },
             ]}
           />
         ))}
       </View>
 
-      {step === 'income' && renderQuestion('毎月の手取り収入は？', incomeOptions, setIncome, 'rent')}
-      {step === 'rent' && renderQuestion('家賃・住宅ローンは月いくら？', rentOptions, setRent, 'saving')}
-      {step === 'saving' && renderQuestion('毎月貯金できていますか？', savingOptions, setSaving, 'subs')}
-      {step === 'subs' && renderQuestion('サブスクはいくつ入っていますか？', subsOptions, setSubs, 'fund')}
-      {step === 'fund' && renderQuestion('生活防衛資金は生活費何ヶ月分ある？', fundOptions, setFund, 'result')}
+      {/* Question */}
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionTitle}>{q.title}</Text>
+        <View style={styles.options}>
+          {q.options.map((opt, i) => (
+            <Pressable
+              key={opt.label}
+              style={[
+                styles.optionButton,
+                selectedIndex === i && styles.optionSelected,
+              ]}
+              onPress={() => handleSelect(opt.value, i)}
+              disabled={selectedIndex !== null}
+            >
+              <Text style={[
+                styles.optionText,
+                selectedIndex === i && styles.optionTextSelected,
+              ]}>
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -178,11 +195,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   questionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Georgia',
+    fontSize: 22,
+    fontWeight: '500',
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 32,
+    lineHeight: 26,
   },
   options: {
     gap: 12,
@@ -196,64 +215,53 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: 'center',
   },
+  optionSelected: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
   optionText: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.text,
   },
+  optionTextSelected: {
+    color: Colors.textOnBrand,
+  },
   resultContent: {
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 120,
     paddingBottom: 60,
   },
-  resultEmoji: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
   rankText: {
-    fontSize: 72,
-    fontWeight: '900',
+    fontFamily: 'Georgia',
+    fontSize: 64,
+    fontWeight: '500',
   },
   typeText: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 22,
+    fontWeight: '500',
     color: Colors.text,
-    marginTop: 8,
-  },
-  scoreLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 4,
-  },
-  adviceBox: {
-    backgroundColor: Colors.surfaceVariant,
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    marginTop: 32,
-    gap: 8,
-  },
-  adviceTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.primary,
+    marginTop: 12,
   },
   adviceText: {
     fontSize: 15,
-    color: Colors.text,
-    lineHeight: 22,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 24,
   },
   startButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 16,
     width: '100%',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 48,
   },
   startButtonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 16,
     fontWeight: '700',
   },

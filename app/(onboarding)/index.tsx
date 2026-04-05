@@ -12,16 +12,15 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
-import { Strings } from '../../src/constants/strings';
 import { saveProfile } from '../../src/services/storage';
 import { defaultProfile } from '../../src/models/user-profile';
 
 const { width } = Dimensions.get('window');
 
 const slides = [
-  { emoji: '🎯', title: '毎月たった1つの行動を', sub: '無理なく家計を改善' },
-  { emoji: '📋', title: 'やるべきことが明確に', sub: '根拠あるアドバイス' },
-  { emoji: '🚀', title: '実行するたびに家計が改善', sub: '行動の積み重ねが力に' },
+  { emoji: '🎯', title: '毎月たった1つの行動を', sub: '無理なく家計を改善できます' },
+  { emoji: '📋', title: 'やるべきことが明確に', sub: '根拠あるアドバイスをお届けします' },
+  { emoji: '🚀', title: '実行するたびに家計が改善', sub: '行動の積み重ねが力になります' },
 ];
 
 export default function OnboardingIntro() {
@@ -29,13 +28,7 @@ export default function OnboardingIntro() {
   const flatListRef = useRef<FlatList>(null);
   const [page, setPage] = useState(0);
   const [nickname, setNickname] = useState('');
-  const isLastSlide = page === slides.length;
-
-  const handleNext = () => {
-    if (page < slides.length) {
-      flatListRef.current?.scrollToIndex({ index: page + 1, animated: true });
-    }
-  };
+  const isLastSlide = page === slides.length - 1;
 
   const handleStart = async () => {
     if (!nickname.trim()) return;
@@ -47,8 +40,6 @@ export default function OnboardingIntro() {
     router.replace('/(onboarding)/diagnosis');
   };
 
-  const data = [...slides, { emoji: '', title: '', sub: '' }]; // extra page for nickname
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -56,11 +47,10 @@ export default function OnboardingIntro() {
     >
       <FlatList
         ref={flatListRef}
-        data={data}
+        data={slides}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        scrollEnabled={false}
         keyExtractor={(_, i) => String(i)}
         onMomentumScrollEnd={(e) => {
           const idx = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -68,25 +58,20 @@ export default function OnboardingIntro() {
         }}
         renderItem={({ item, index }) => (
           <View style={styles.slide}>
-            {index < slides.length ? (
-              <>
-                <Text style={styles.emoji}>{item.emoji}</Text>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.sub}>{item.sub}</Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.emoji}>👋</Text>
-                <Text style={styles.title}>ニックネームを教えてください</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="例：たろう"
-                  value={nickname}
-                  onChangeText={setNickname}
-                  returnKeyType="done"
-                  maxLength={20}
-                />
-              </>
+            <Text style={styles.emoji}>{item.emoji}</Text>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.sub}>{item.sub}</Text>
+
+            {index === slides.length - 1 && (
+              <TextInput
+                style={styles.input}
+                placeholder="ニックネームを入力"
+                placeholderTextColor={Colors.textTertiary}
+                value={nickname}
+                onChangeText={setNickname}
+                returnKeyType="done"
+                maxLength={20}
+              />
             )}
           </View>
         )}
@@ -94,21 +79,23 @@ export default function OnboardingIntro() {
 
       {/* Dots */}
       <View style={styles.dots}>
-        {data.map((_, i) => (
+        {slides.map((_, i) => (
           <View key={i} style={[styles.dot, page === i && styles.dotActive]} />
         ))}
       </View>
 
       {/* Button */}
-      <Pressable
-        style={[styles.button, isLastSlide && !nickname.trim() && styles.buttonDisabled]}
-        onPress={isLastSlide ? handleStart : handleNext}
-        disabled={isLastSlide && !nickname.trim()}
-      >
-        <Text style={styles.buttonText}>
-          {isLastSlide ? Strings.diagnosisStart : '次へ'}
-        </Text>
-      </Pressable>
+      {isLastSlide ? (
+        <Pressable
+          style={[styles.button, !nickname.trim() && styles.buttonDisabled]}
+          onPress={handleStart}
+          disabled={!nickname.trim()}
+        >
+          <Text style={styles.buttonText}>診断を始める</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.buttonPlaceholder} />
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -127,29 +114,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emoji: {
-    fontSize: 72,
+    fontSize: 64,
     marginBottom: 24,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Georgia',
+    fontSize: 26,
+    fontWeight: '500',
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 8,
+    lineHeight: 31,
   },
   sub: {
     fontSize: 15,
     color: Colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 24,
   },
   input: {
     width: '100%',
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 16,
-    marginTop: 20,
+    marginTop: 24,
     color: Colors.text,
   },
   dots: {
@@ -162,14 +154,14 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.borderWarm,
   },
   dotActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     width: 24,
   },
   button: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     marginHorizontal: 24,
     borderRadius: 14,
     paddingVertical: 16,
@@ -179,8 +171,12 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 16,
     fontWeight: '700',
+  },
+  buttonPlaceholder: {
+    height: 52,
+    marginHorizontal: 24,
   },
 });

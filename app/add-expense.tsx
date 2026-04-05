@@ -1,27 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../src/constants/colors';
 import { Strings } from '../src/constants/strings';
 import { useExpenses } from '../src/hooks/useExpenses';
-import type { CategoryType } from '../src/models/expense';
-
-const categories: { key: CategoryType; label: string; emoji: string }[] = [
-  { key: 'fixed', label: '固定費', emoji: '🏠' },
-  { key: 'food', label: '食費', emoji: '🍽️' },
-  { key: 'transport', label: '交通費', emoji: '🚃' },
-  { key: 'utility', label: '光熱費', emoji: '⚡' },
-  { key: 'entertainment', label: '娯楽', emoji: '🎬' },
-  { key: 'other', label: 'その他', emoji: '📦' },
-];
+import { useCategories } from '../src/hooks/useCategories';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { addExpense } = useExpenses();
+  const { categories, isCategoryFixed } = useCategories();
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<CategoryType>('food');
+  const [category, setCategory] = useState('food');
   const [label, setLabel] = useState('');
   const [isFixed, setIsFixed] = useState(false);
+
+  useEffect(() => {
+    if (isCategoryFixed(category)) {
+      setIsFixed(true);
+    }
+  }, [category, isCategoryFixed]);
 
   const handleSave = async () => {
     const numAmount = parseInt(amount, 10);
@@ -35,6 +34,7 @@ export default function AddExpenseScreen() {
       isFixed,
     });
 
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
   };
 
@@ -46,6 +46,7 @@ export default function AddExpenseScreen() {
         <TextInput
           style={styles.amountInput}
           placeholder="0"
+          placeholderTextColor={Colors.textTertiary}
           keyboardType="number-pad"
           value={amount}
           onChangeText={setAmount}
@@ -58,25 +59,34 @@ export default function AddExpenseScreen() {
       <View style={styles.categoryGrid}>
         {categories.map((c) => (
           <Pressable
-            key={c.key}
-            style={[styles.categoryButton, category === c.key && styles.categoryActive]}
-            onPress={() => setCategory(c.key)}
+            key={c.id}
+            style={[styles.categoryButton, category === c.id && styles.categoryActive]}
+            onPress={() => setCategory(c.id)}
           >
             <Text style={styles.categoryEmoji}>{c.emoji}</Text>
             <Text
-              style={[styles.categoryLabel, category === c.key && styles.categoryLabelActive]}
+              style={[styles.categoryLabel, category === c.id && styles.categoryLabelActive]}
             >
-              {c.label}
+              {c.name}
             </Text>
           </Pressable>
         ))}
+        {/* Edit categories button */}
+        <Pressable
+          style={styles.editCategoryButton}
+          onPress={() => router.push('/manage-categories')}
+        >
+          <Text style={styles.editCategoryEmoji}>✏️</Text>
+          <Text style={styles.editCategoryLabel}>追加/編集</Text>
+        </Pressable>
       </View>
 
       {/* Label */}
       <Text style={styles.sectionLabel}>ラベル（任意）</Text>
       <TextInput
         style={styles.textInput}
-        placeholder="例：ランチ代"
+        placeholder="例：スーパー、電気代"
+        placeholderTextColor={Colors.textTertiary}
         value={label}
         onChangeText={setLabel}
       />
@@ -87,7 +97,7 @@ export default function AddExpenseScreen() {
         <Switch
           value={isFixed}
           onValueChange={setIsFixed}
-          trackColor={{ true: Colors.primary }}
+          trackColor={{ true: Colors.primary, false: Colors.borderWarm }}
         />
       </View>
 
@@ -125,8 +135,9 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   amountInput: {
+    fontFamily: 'Georgia',
     fontSize: 48,
-    fontWeight: '800',
+    fontWeight: '500',
     color: Colors.text,
     minWidth: 120,
     textAlign: 'center',
@@ -143,17 +154,14 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     width: '30%',
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.border,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
     paddingVertical: 14,
     alignItems: 'center',
     gap: 4,
   },
   categoryActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '0D',
+    backgroundColor: Colors.secondary,
   },
   categoryEmoji: {
     fontSize: 20,
@@ -163,14 +171,34 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   categoryLabelActive: {
-    color: Colors.primary,
+    color: Colors.textOnBrand,
     fontWeight: '700',
   },
+  editCategoryButton: {
+    width: '30%',
+    backgroundColor: Colors.border,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
+    borderStyle: 'dashed',
+  },
+  editCategoryEmoji: {
+    fontSize: 20,
+  },
+  editCategoryLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
   textInput: {
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 15,
     color: Colors.text,
   },
@@ -184,7 +212,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -193,7 +221,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   saveText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 16,
     fontWeight: '700',
   },

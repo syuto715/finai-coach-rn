@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
-import type { Expense, CategoryType } from '../models/expense';
+import type { Expense } from '../models/expense';
 import { loadExpenses, saveExpenses } from '../services/storage';
 
 export function useExpenses() {

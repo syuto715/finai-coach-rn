@@ -7,7 +7,7 @@ import { useSubscriptions } from '../src/hooks/useSubscriptions';
 import type { SubCategory } from '../src/models/subscription';
 
 const subCategories: { key: SubCategory; label: string; emoji: string }[] = [
-  { key: 'video', label: '動画', emoji: '🎥' },
+  { key: 'video', label: '動画', emoji: '🎬' },
   { key: 'music', label: '音楽', emoji: '🎵' },
   { key: 'news', label: 'ニュース', emoji: '📰' },
   { key: 'tool', label: 'ツール', emoji: '🔧' },
@@ -47,6 +47,7 @@ export default function AddSubscriptionScreen() {
       <TextInput
         style={styles.input}
         placeholder="例：Netflix"
+        placeholderTextColor={Colors.textTertiary}
         value={name}
         onChangeText={setName}
         autoFocus
@@ -59,6 +60,7 @@ export default function AddSubscriptionScreen() {
         <TextInput
           style={styles.priceInput}
           placeholder="0"
+          placeholderTextColor={Colors.textTertiary}
           keyboardType="number-pad"
           value={price}
           onChangeText={setPrice}
@@ -89,6 +91,7 @@ export default function AddSubscriptionScreen() {
       <TextInput
         style={styles.input}
         placeholder="解約手順など"
+        placeholderTextColor={Colors.textTertiary}
         value={memo}
         onChangeText={setMemo}
       />
@@ -120,17 +123,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   input: {
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 15,
     color: Colors.text,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
     borderRadius: 12,
     paddingHorizontal: 16,
   },
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   },
   priceInput: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 15,
     color: Colors.text,
   },
@@ -151,17 +158,14 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     width: '30%',
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.border,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
     paddingVertical: 14,
     alignItems: 'center',
     gap: 4,
   },
   categoryActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '0D',
+    backgroundColor: Colors.secondary,
   },
   categoryEmoji: {
     fontSize: 20,
@@ -171,11 +175,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   categoryLabelActive: {
-    color: Colors.primary,
+    color: Colors.textOnBrand,
     fontWeight: '700',
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -185,7 +189,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   saveText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 16,
     fontWeight: '700',
   },

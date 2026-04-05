@@ -1,4 +1,4 @@
-import type { Expense, CategoryType } from '../models/expense';
+import type { Expense } from '../models/expense';
 
 /** Format number with Japanese comma grouping */
 export function formatYen(amount: number): string {
@@ -28,12 +28,12 @@ export function getMonthExpenses(expenses: Expense[], year: number, month: numbe
 }
 
 /** Sum expenses by category */
-export function categoryTotals(expenses: Expense[]): Record<CategoryType, number> {
+export function categoryTotals(expenses: Expense[]): Record<string, number> {
   const totals: Record<string, number> = {};
   for (const e of expenses) {
     totals[e.category] = (totals[e.category] ?? 0) + e.amount;
   }
-  return totals as Record<CategoryType, number>;
+  return totals;
 }
 
 /** Total amount of expense array */
@@ -55,10 +55,10 @@ export function fixedCostScore(fixedTotal: number, totalExpense: number, monthly
 
 /** Score color based on score value */
 export function scoreColor(score: number): string {
-  if (score >= 90) return '#34A853';
-  if (score >= 70) return '#FFB300';
-  if (score >= 40) return '#FF6D00';
-  return '#E53935';
+  if (score >= 90) return '#2E7D32';
+  if (score >= 70) return '#F9A825';
+  if (score >= 40) return '#c96442';
+  return '#b53333';
 }
 
 /** Emergency fund progress ratio (0..1) */
@@ -69,9 +69,9 @@ export function fundProgressRatio(current: number, target: number): number {
 
 /** Meter color based on ratio */
 export function meterColor(ratio: number): string {
-  if (ratio > 0.8) return '#34A853';
-  if (ratio > 0.5) return '#FFB300';
-  return '#E53935';
+  if (ratio > 0.8) return '#2E7D32';
+  if (ratio > 0.5) return '#F9A825';
+  return '#b53333';
 }
 
 /** Emergency fund advice text */
@@ -82,7 +82,7 @@ export function fundAdvice(ratio: number): string {
   return '現金残高を先に整えましょう。NISAは生活防衛資金確保後に検討をお勧めします。';
 }
 
-/** Calculate diagnosis score from profile answers */
+/** Calculate diagnosis score from profile answers (0-10 scale) */
 export function diagnosisScore(
   income: number,
   rent: number,
@@ -92,49 +92,40 @@ export function diagnosisScore(
 ): number {
   let score = 0;
 
-  // Rent ratio (max 30)
-  const rentRatio = income > 0 ? rent / income : 0;
-  if (rentRatio <= 0.2) score += 30;
-  else if (rentRatio <= 0.25) score += 25;
-  else if (rentRatio <= 0.3) score += 15;
-  else score += 5;
+  const rentRatio = income > 0 ? rent / income : 1;
+  if (rentRatio <= 0.3) score += 2;
+  else if (rentRatio <= 0.4) score += 1;
 
-  // Saving ability (max 25)
-  if (saving === 'yes') score += 25;
-  else if (saving === 'little') score += 15;
-  else score += 5;
+  if (saving === 'yes') score += 3;
+  else if (saving === 'little') score += 1;
 
-  // Subscription count (max 20)
-  if (subCount === '0-2') score += 20;
-  else if (subCount === '3-5') score += 12;
-  else score += 5;
+  if (subCount === '0-2') score += 2;
+  else if (subCount === '3-5') score += 1;
 
-  // Emergency fund (max 25)
-  if (fundMonths === '6+') score += 25;
-  else if (fundMonths === '3-6') score += 20;
-  else if (fundMonths === '1-3') score += 10;
-  else score += 3;
+  if (fundMonths === '6+') score += 3;
+  else if (fundMonths === '3-6') score += 2;
+  else if (fundMonths === '1-3') score += 1;
 
-  return Math.min(score, 100);
+  return score;
 }
 
-/** Diagnosis rank from score */
+/** Diagnosis rank from score (0-10) */
 export function diagnosisRank(score: number): string {
-  if (score >= 85) return 'S';
-  if (score >= 70) return 'A';
-  if (score >= 50) return 'B';
-  if (score >= 30) return 'C';
+  if (score >= 9) return 'S';
+  if (score >= 7) return 'A';
+  if (score >= 5) return 'B';
+  if (score >= 3) return 'C';
   return 'D';
 }
 
 /** Diagnosis type label from rank */
 export function diagnosisType(rank: string): string {
   switch (rank) {
-    case 'S': return 'パーフェクト家計型';
+    case 'S': return '家計マスター型';
     case 'A': return 'コツコツ堅実型';
-    case 'B': return 'バランス改善型';
+    case 'B': return 'バランス模索型';
     case 'C': return 'うっかり浪費型';
-    case 'D': return '家計見直しスタート型';
+    case 'D': return 'これからスタート型';
     default: return '';
   }
 }
@@ -142,12 +133,24 @@ export function diagnosisType(rank: string): string {
 /** First action advice from rank */
 export function diagnosisAdvice(rank: string): string {
   switch (rank) {
-    case 'S': return '今の習慣を維持しつつ、投資の第一歩を踏み出しましょう';
-    case 'A': return '固定費を1つだけ見直して、さらに余裕を作りましょう';
-    case 'B': return 'まずはサブスクの棚卸しから始めてみましょう';
-    case 'C': return '食費を週単位で管理して、ムダ遣いを見える化しましょう';
-    case 'D': return '毎日の支出を記録することから始めましょう';
+    case 'S': return '素晴らしい！さらなる最適化を目指しましょう';
+    case 'A': return '良い調子です。固定費の最適化で更に伸ばせます';
+    case 'B': return 'まずは固定費の見直しから始めてみましょう';
+    case 'C': return 'サブスクと固定費の棚卸しが効果的です';
+    case 'D': return '大丈夫！まず支出を記録することから始めましょう';
     default: return '';
+  }
+}
+
+/** Diagnosis rank color */
+export function diagnosisRankColor(rank: string): string {
+  switch (rank) {
+    case 'S': return '#2E7D32';
+    case 'A': return '#1B5E20';
+    case 'B': return '#F9A825';
+    case 'C': return '#c96442';
+    case 'D': return '#b53333';
+    default: return '#141413';
   }
 }
 
@@ -157,7 +160,22 @@ export function formatDateJP(dateStr: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
+/** Format date to YYYY/MM/DD */
+export function formatDateSlash(dateStr: string): string {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}/${m}/${day}`;
+}
+
 /** Format month to Japanese style */
 export function formatMonthJP(year: number, month: number): string {
   return `${year}年${month + 1}月`;
 }
+
+/** Food category IDs */
+export const FOOD_CATEGORY_IDS = ['food', 'eating-out'];
+
+/** Entertainment category IDs */
+export const ENTERTAINMENT_CATEGORY_IDS = ['entertainment', 'hobby'];

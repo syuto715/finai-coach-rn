@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import type { ActionProposal } from '../models/action-proposal';
 import { Colors } from '../constants/colors';
 import { Strings } from '../constants/strings';
@@ -13,37 +14,52 @@ interface Props {
 }
 
 export function ActionCard({ proposal, onDone, onDetail, compact = false }: Props) {
+  const handleDone = () => {
+    Alert.alert(Strings.confirmDone, '実行記録が保存されます。', [
+      { text: Strings.cancel, style: 'cancel' },
+      {
+        text: Strings.actionDone,
+        onPress: async () => {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          onDone?.();
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{proposal.title}</Text>
-      <Text style={styles.body} numberOfLines={compact ? 2 : 3}>
-        {proposal.body}
-      </Text>
-      <TrustBadge level={proposal.trustLevel} />
+      <View style={styles.accentLine} />
+      <View style={styles.cardContent}>
+        <Text style={styles.title}>{proposal.title}</Text>
+        <Text style={styles.body} numberOfLines={compact ? 2 : 3}>
+          {proposal.body}
+        </Text>
+        <TrustBadge level={proposal.trustLevel} />
 
-      {!compact && (
-        <View style={styles.actions}>
-          {proposal.isExecuted ? (
-            <View style={styles.doneBanner}>
-              <Text style={styles.doneIcon}>✅</Text>
-              <Text style={styles.doneText}>実行済み</Text>
-            </View>
-          ) : (
-            <>
-              {onDone && (
-                <Pressable style={styles.doneButton} onPress={onDone}>
-                  <Text style={styles.doneButtonText}>{Strings.actionDone}</Text>
-                </Pressable>
-              )}
-              {onDetail && (
-                <Pressable onPress={onDetail}>
-                  <Text style={styles.detailLink}>詳細を見る</Text>
-                </Pressable>
-              )}
-            </>
-          )}
-        </View>
-      )}
+        {!compact && (
+          <View style={styles.actions}>
+            {proposal.isExecuted ? (
+              <View style={styles.doneBanner}>
+                <Text style={styles.doneText}>✅ 実行済み</Text>
+              </View>
+            ) : (
+              <>
+                {onDone && (
+                  <Pressable style={styles.doneButton} onPress={handleDone}>
+                    <Text style={styles.doneButtonText}>{Strings.actionDone}</Text>
+                  </Pressable>
+                )}
+                {onDetail && (
+                  <Pressable onPress={onDetail}>
+                    <Text style={styles.detailLink}>詳細を見る</Text>
+                  </Pressable>
+                )}
+              </>
+            )}
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -51,24 +67,34 @@ export function ActionCard({ proposal, onDone, onDetail, compact = false }: Prop
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
+  },
+  accentLine: {
+    height: 4,
+    backgroundColor: Colors.secondary,
+  },
+  cardContent: {
     padding: 20,
     gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 22,
+    fontWeight: '500',
     color: Colors.text,
+    lineHeight: 26,
   },
   body: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    lineHeight: 21,
+    lineHeight: 24,
   },
   actions: {
     flexDirection: 'row',
@@ -78,16 +104,16 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     backgroundColor: Colors.secondary,
-    borderRadius: 14,
+    borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 14,
     flex: 1,
     alignItems: 'center',
   },
   doneButtonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   detailLink: {
     color: Colors.primary,
@@ -97,14 +123,11 @@ const styles = StyleSheet.create({
   doneBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.success + '14',
+    backgroundColor: 'rgba(46,125,50,0.10)',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
-  },
-  doneIcon: {
-    fontSize: 14,
   },
   doneText: {
     color: Colors.success,

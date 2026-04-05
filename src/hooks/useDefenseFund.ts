@@ -7,7 +7,7 @@ export function useDefenseFund(profile: UserProfile) {
     const monthlyExpense = profile.monthlyExpenseTarget > 0
       ? profile.monthlyExpenseTarget
       : profile.monthlyIncome > 0
-        ? Math.round(profile.monthlyIncome * 0.7)
+        ? Math.round(profile.monthlyIncome * 0.8)
         : 0;
     return monthlyExpense * profile.targetDefenseMonths;
   }, [profile.monthlyExpenseTarget, profile.monthlyIncome, profile.targetDefenseMonths]);
@@ -19,7 +19,7 @@ export function useDefenseFund(profile: UserProfile) {
 
   const simulation = useMemo(() => {
     if (target <= 0 || remaining <= 0) return null;
-    const monthlySaving = 30000; // default
+    const monthlySaving = 30000;
     const months = Math.ceil(remaining / monthlySaving);
     const achieveDate = new Date();
     achieveDate.setMonth(achieveDate.getMonth() + months);

@@ -10,7 +10,7 @@ export default function Index() {
 
   useEffect(() => {
     loadProfile().then((p) => {
-      setOnboarded(p?.onboardingCompleted ?? false);
+      setOnboarded(p?.onboardingCompleted === true);
       setLoading(false);
     });
   }, []);

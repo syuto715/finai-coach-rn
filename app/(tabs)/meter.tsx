@@ -4,16 +4,18 @@ import {
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '../../src/constants/colors';
-import { Strings } from '../../src/constants/strings';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useDefenseFund } from '../../src/hooks/useDefenseFund';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
 import { formatNumber, toMan } from '../../src/utils/calculations';
 
+const targetMonthOptions = [3, 4, 5, 6];
+
 export default function MeterScreen() {
   const { profile, updateProfile } = useProfile();
   const fund = useDefenseFund(profile);
-  const [showModal, setShowModal] = useState(false);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [showTargetModal, setShowTargetModal] = useState(false);
   const [inputAmount, setInputAmount] = useState('');
 
   const pct = Math.round(fund.ratio * 100);
@@ -21,17 +23,22 @@ export default function MeterScreen() {
 
   // Ring
   const size = 240;
-  const strokeWidth = 18;
+  const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - fund.ratio * circumference;
 
-  const handleSave = async () => {
+  const handleSaveBalance = async () => {
     const val = parseInt(inputAmount, 10);
     if (isNaN(val) || val < 0) return;
     await updateProfile({ cashBalance: val });
-    setShowModal(false);
+    setShowBalanceModal(false);
     setInputAmount('');
+  };
+
+  const handleChangeTarget = async (months: number) => {
+    await updateProfile({ targetDefenseMonths: months });
+    setShowTargetModal(false);
   };
 
   return (
@@ -45,7 +52,7 @@ export default function MeterScreen() {
                 cx={size / 2}
                 cy={size / 2}
                 r={radius}
-                stroke={color + '26'}
+                stroke={Colors.border}
                 strokeWidth={strokeWidth}
                 fill="none"
               />
@@ -65,34 +72,30 @@ export default function MeterScreen() {
             </Svg>
             <View style={styles.ringOverlay}>
               <Text style={[styles.pctText, { color }]}>{pct}%</Text>
-              <Text style={styles.pctLabel}>達成</Text>
             </View>
           </View>
 
-          {/* Zone labels */}
-          <View style={styles.zones}>
-            <Zone label="0-50%" color={Colors.error} active={fund.ratio <= 0.5} />
-            <Zone label="51-80%" color={Colors.warning} active={fund.ratio > 0.5 && fund.ratio <= 0.8} />
-            <Zone label="81-100%" color={Colors.success} active={fund.ratio > 0.8} />
-          </View>
-
           {/* Amounts */}
-          <Text style={styles.amountMain}>
-            ¥{formatNumber(fund.current)}
-            <Text style={styles.amountSub}> / ¥{formatNumber(fund.target)}</Text>
+          <Text style={styles.currentLabel}>
+            現在の現金残高：{toMan(fund.current)}
           </Text>
-          <Text style={styles.amountMan}>
-            （{fund.currentLabel} / {fund.targetLabel}）
+          <Text style={styles.targetLabel}>
+            目標：生活費{profile.targetDefenseMonths}ヶ月分 = {toMan(fund.target)}
           </Text>
 
-          <Pressable style={styles.updateButton} onPress={() => setShowModal(true)}>
-            <Text style={styles.updateButtonText}>{Strings.updateFund}</Text>
-          </Pressable>
+          {/* Buttons */}
+          <View style={styles.buttonRow}>
+            <Pressable style={styles.updateButton} onPress={() => setShowBalanceModal(true)}>
+              <Text style={styles.updateButtonText}>残高を更新する</Text>
+            </Pressable>
+            <Pressable style={styles.targetButton} onPress={() => setShowTargetModal(true)}>
+              <Text style={styles.targetButtonText}>目標月数を変更</Text>
+            </Pressable>
+          </View>
         </View>
 
-        {/* Advice */}
+        {/* Status message */}
         <View style={styles.adviceCard}>
-          <Text style={styles.adviceIcon}>💡</Text>
           <Text style={styles.adviceText}>{fund.advice}</Text>
         </View>
 
@@ -101,42 +104,66 @@ export default function MeterScreen() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>達成シミュレーション</Text>
             <Text style={styles.simText}>
-              月{formatNumber(fund.simulation.monthlySaving)}円の積立で{fund.simulation.months}ヶ月後に達成
+              月{formatNumber(fund.simulation.monthlySaving)}円積立で{fund.simulation.months}ヶ月後達成
             </Text>
           </View>
         )}
       </ScrollView>
       <DisclaimerFooter />
 
-      {/* Update Modal */}
-      <Modal visible={showModal} transparent animationType="slide">
+      {/* Balance Update Modal */}
+      <Modal visible={showBalanceModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{Strings.updateFund}</Text>
+            <Text style={styles.modalTitle}>残高を更新する</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="現在の現金残高（円）"
+              placeholderTextColor={Colors.textTertiary}
               keyboardType="number-pad"
               value={inputAmount}
               onChangeText={setInputAmount}
             />
-            <Pressable style={styles.modalSave} onPress={handleSave}>
-              <Text style={styles.modalSaveText}>{Strings.save}</Text>
+            <Pressable style={styles.modalSave} onPress={handleSaveBalance}>
+              <Text style={styles.modalSaveText}>保存</Text>
             </Pressable>
-            <Pressable onPress={() => setShowModal(false)}>
-              <Text style={styles.modalCancel}>{Strings.cancel}</Text>
+            <Pressable onPress={() => setShowBalanceModal(false)}>
+              <Text style={styles.modalCancel}>キャンセル</Text>
             </Pressable>
           </View>
         </View>
       </Modal>
-    </View>
-  );
-}
 
-function Zone({ label, color, active }: { label: string; color: string; active: boolean }) {
-  return (
-    <View style={[styles.zone, active && { backgroundColor: color + '26', borderColor: color }]}>
-      <Text style={[styles.zoneText, active && { color, fontWeight: '700' }]}>{label}</Text>
+      {/* Target Month Modal */}
+      <Modal visible={showTargetModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>目標月数を変更</Text>
+            <View style={styles.monthOptions}>
+              {targetMonthOptions.map((m) => (
+                <Pressable
+                  key={m}
+                  style={[
+                    styles.monthOption,
+                    profile.targetDefenseMonths === m && styles.monthOptionActive,
+                  ]}
+                  onPress={() => handleChangeTarget(m)}
+                >
+                  <Text style={[
+                    styles.monthOptionText,
+                    profile.targetDefenseMonths === m && styles.monthOptionTextActive,
+                  ]}>
+                    {m}ヶ月
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable onPress={() => setShowTargetModal(false)}>
+              <Text style={styles.modalCancel}>キャンセル</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -147,25 +174,27 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    padding: 20,
     gap: 16,
     paddingBottom: 24,
   },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 24,
     alignItems: 'center',
     gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 16,
+    fontWeight: '500',
     color: Colors.text,
   },
   ringContainer: {
@@ -179,69 +208,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pctText: {
-    fontSize: 42,
-    fontWeight: '900',
+    fontFamily: 'Georgia',
+    fontSize: 36,
+    fontWeight: '500',
   },
-  pctLabel: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  zones: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  zone: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  zoneText: {
-    fontSize: 11,
-    color: Colors.textHint,
-  },
-  amountMain: {
-    fontSize: 20,
-    fontWeight: '800',
+  currentLabel: {
+    fontSize: 15,
     color: Colors.text,
+    marginTop: 8,
   },
-  amountSub: {
+  targetLabel: {
     fontSize: 14,
-    fontWeight: '400',
     color: Colors.textSecondary,
   },
-  amountMan: {
-    fontSize: 11,
-    color: Colors.textHint,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
   },
   updateButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingHorizontal: 24,
+    backgroundColor: Colors.secondary,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
   },
   updateButtonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  targetButton: {
+    backgroundColor: Colors.buttonWarmSand,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  targetButtonText: {
+    color: Colors.buttonWarmSandText,
     fontSize: 14,
     fontWeight: '700',
   },
   adviceCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 16,
-    gap: 10,
-    elevation: 1,
-  },
-  adviceIcon: {
-    fontSize: 18,
   },
   adviceText: {
-    flex: 1,
     fontSize: 14,
     color: Colors.textSecondary,
-    lineHeight: 21,
+    lineHeight: 22,
   },
   simText: {
     fontSize: 14,
@@ -260,25 +277,29 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   modalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 18,
+    fontWeight: '500',
     color: Colors.text,
   },
   modalInput: {
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.borderWarm,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 16,
+    color: Colors.text,
   },
   modalSave: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   modalSaveText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -287,5 +308,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: 8,
+  },
+  monthOptions: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'center',
+  },
+  monthOption: {
+    backgroundColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  monthOptionActive: {
+    backgroundColor: Colors.secondary,
+  },
+  monthOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  monthOptionTextActive: {
+    color: Colors.textOnBrand,
   },
 });

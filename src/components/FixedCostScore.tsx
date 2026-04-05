@@ -22,6 +22,15 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
+  if (totalExpense === 0 && monthlyIncome === 0) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>固定費スコア</Text>
+        <Text style={styles.emptyText}>データを記録するとスコアが表示されます</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>固定費スコア</Text>
@@ -31,7 +40,7 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={color + '26'}
+            stroke={Colors.border}
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -55,10 +64,6 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
         </View>
       </View>
       <Text style={styles.comparison}>全国平均28%に対して、あなたは{ratio}%</Text>
-      <View style={styles.badge}>
-        <Text style={styles.badgeIcon}>ℹ️</Text>
-        <Text style={styles.badgeText}>参考：総務省 家計調査</Text>
-      </View>
     </View>
   );
 }
@@ -67,17 +72,19 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 20,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 16,
+    fontWeight: '500',
     color: Colors.text,
     marginBottom: 16,
   },
@@ -92,33 +99,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreText: {
-    fontSize: 48,
-    fontWeight: '900',
+    fontFamily: 'Georgia',
+    fontSize: 40,
+    fontWeight: '500',
   },
   maxText: {
     fontSize: 12,
-    color: Colors.textHint,
+    color: Colors.textTertiary,
   },
   comparison: {
     fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 16,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceVariant,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginTop: 8,
-    gap: 4,
-  },
-  badgeIcon: {
-    fontSize: 10,
-  },
-  badgeText: {
-    fontSize: 10,
-    color: Colors.textHint,
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textTertiary,
+    paddingVertical: 20,
   },
 });

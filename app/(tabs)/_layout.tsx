@@ -7,17 +7,22 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.surface },
-        headerTitleStyle: { fontWeight: '700', color: Colors.text },
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textHint,
-        tabBarStyle: { backgroundColor: Colors.surface },
+        headerStyle: { backgroundColor: Colors.background },
+        headerTitleStyle: { fontFamily: 'Georgia', fontWeight: '500', color: Colors.text },
+        tabBarActiveTintColor: Colors.secondary,
+        tabBarInactiveTintColor: Colors.textTertiary,
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
+          borderTopWidth: 1,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'ホーム',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏠</Text>,
         }}
       />
@@ -32,21 +37,21 @@ export default function TabLayout() {
         name="subscriptions"
         options={{
           title: 'サブスク',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📱</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔄</Text>,
         }}
       />
       <Tabs.Screen
         name="meter"
         options={{
           title: 'メーター',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🛡️</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text>,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: '履歴',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📜</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text>,
         }}
       />
     </Tabs>

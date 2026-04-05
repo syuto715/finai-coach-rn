@@ -11,21 +11,17 @@ interface Props {
 }
 
 export function WeeklyBudget({ remaining, weeklyBudget, progress, isLow }: Props) {
-  const color = isLow ? Colors.error : Colors.primary;
+  const barColor = isLow ? Colors.error : Colors.primary;
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.headerIcon}>📅</Text>
-        <Text style={styles.headerText}>今週の予算</Text>
-      </View>
       <Text style={styles.label}>
         今週あと{' '}
-        <Text style={[styles.amount, { color }]}>{formatNumber(remaining)}円</Text>
+        <Text style={[styles.amount, { color: barColor }]}>{formatNumber(remaining)}円</Text>
         {' '}使えます
       </Text>
       <View style={styles.barBg}>
-        <View style={[styles.barFill, { width: `${Math.min(progress * 100, 100)}%`, backgroundColor: color }]} />
+        <View style={[styles.barFill, { width: `${Math.min(progress * 100, 100)}%`, backgroundColor: barColor }]} />
       </View>
       <Text style={styles.footer}>週予算: {formatNumber(weeklyBudget)}円</Text>
     </View>
@@ -36,26 +32,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-  },
-  headerIcon: {
-    fontSize: 14,
-  },
-  headerText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 20,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   label: {
     fontSize: 14,
@@ -63,12 +46,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   amount: {
+    fontFamily: 'Georgia',
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '500',
   },
   barBg: {
     height: 8,
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.border,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -78,7 +62,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     fontSize: 12,
-    color: Colors.textHint,
+    color: Colors.textTertiary,
     marginTop: 6,
   },
 });

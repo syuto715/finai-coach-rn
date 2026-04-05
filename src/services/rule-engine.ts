@@ -3,12 +3,15 @@ import type { ActionProposal } from '../models/action-proposal';
 import type { Expense } from '../models/expense';
 import type { Subscription } from '../models/subscription';
 import type { UserProfile } from '../models/user-profile';
+import type { ExpenseCategory } from '../models/category';
 import { evidenceSources } from '../constants/evidence-sources';
+import { FOOD_CATEGORY_IDS, ENTERTAINMENT_CATEGORY_IDS } from '../utils/calculations';
 
 interface RuleInput {
   expenses: Expense[];
   subscriptions: Subscription[];
   profile: UserProfile;
+  categories?: ExpenseCategory[];
 }
 
 const src = evidenceSources.soumu_kakei_2026_01;
@@ -18,7 +21,12 @@ function fmt(n: number): string {
 }
 
 export function generateProposal(input: RuleInput): ActionProposal {
-  const { expenses, subscriptions, profile } = input;
+  const { expenses, subscriptions, profile, categories } = input;
+
+  // Build set of fixed category IDs from categories list
+  const fixedCategoryIds = new Set(
+    (categories ?? []).filter((c) => c.isFixed).map((c) => c.id),
+  );
 
   const now = new Date();
   const thisMonth = expenses.filter((e) => {
@@ -27,17 +35,30 @@ export function generateProposal(input: RuleInput): ActionProposal {
   });
 
   const total = thisMonth.reduce((s, e) => s + e.amount, 0);
-  const fixedTotal = thisMonth.filter((e) => e.isFixed).reduce((s, e) => s + e.amount, 0);
-  const foodTotal = thisMonth.filter((e) => e.category === 'food').reduce((s, e) => s + e.amount, 0);
-  const entTotal = thisMonth.filter((e) => e.category === 'entertainment').reduce((s, e) => s + e.amount, 0);
-  const subTotal = subscriptions.filter((s) => s.isActive).reduce((s, sub) => s + sub.monthlyPrice, 0);
+
+  // Use expense's isFixed flag, or fall back to category isFixed
+  const fixedTotal = thisMonth
+    .filter((e) => e.isFixed || fixedCategoryIds.has(e.category))
+    .reduce((s, e) => s + e.amount, 0);
+
+  const foodTotal = thisMonth
+    .filter((e) => FOOD_CATEGORY_IDS.includes(e.category))
+    .reduce((s, e) => s + e.amount, 0);
+
+  const entTotal = thisMonth
+    .filter((e) => ENTERTAINMENT_CATEGORY_IDS.includes(e.category))
+    .reduce((s, e) => s + e.amount, 0);
+
+  const subTotal = subscriptions
+    .filter((s) => s.isActive)
+    .reduce((s, sub) => s + sub.monthlyPrice, 0);
 
   const fixedRatio = total > 0 ? fixedTotal / total : 0;
   const entRatio = total > 0 ? entTotal / total : 0;
 
   const fundTarget = profile.monthlyExpenseTarget > 0
     ? profile.monthlyExpenseTarget * profile.targetDefenseMonths
-    : profile.monthlyIncome * 0.7 * profile.targetDefenseMonths;
+    : profile.monthlyIncome * 0.8 * profile.targetDefenseMonths;
   const fundProgress = fundTarget > 0 ? profile.cashBalance / fundTarget : 0;
 
   const base: Omit<ActionProposal, 'id' | 'createdAt' | 'title' | 'body' | 'trustLevel' | 'applicableScope' | 'expertNote'> = {
@@ -51,7 +72,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
   if (fixedRatio > 0.3 && total > 0) {
     const pct = Math.round(fixedRatio * 100);
     const topFixed = thisMonth
-      .filter((e) => e.isFixed)
+      .filter((e) => e.isFixed || fixedCategoryIds.has(e.category))
       .sort((a, b) => b.amount - a.amount)[0];
     const topLabel = topFixed?.label || '固定費';
     const topAmt = topFixed?.amount ?? 0;

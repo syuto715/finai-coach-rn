@@ -4,11 +4,11 @@ import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useExecutions } from '../../src/hooks/useExecutions';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
-import { formatDateJP } from '../../src/utils/calculations';
+import { formatDateSlash } from '../../src/utils/calculations';
 import type { ExecutionRecord } from '../../src/models/execution-record';
 
 export default function HistoryScreen() {
-  const { executions, loading } = useExecutions();
+  const { executions } = useExecutions();
 
   const renderItem = ({ item }: { item: ExecutionRecord }) => (
     <View style={styles.itemCard}>
@@ -16,8 +16,7 @@ export default function HistoryScreen() {
         <Text style={styles.doneIcon}>✅</Text>
         <Text style={styles.itemTitle}>{item.proposalTitle}</Text>
       </View>
-      <Text style={styles.itemDate}>{formatDateJP(item.executedAt)}</Text>
-      {item.memo ? <Text style={styles.itemMemo}>{item.memo}</Text> : null}
+      <Text style={styles.itemDate}>{formatDateSlash(item.executedAt)}</Text>
     </View>
   );
 
@@ -28,9 +27,16 @@ export default function HistoryScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          executions.length > 0 ? (
+            <View style={styles.countCard}>
+              <Text style={styles.countLabel}>合計実行回数</Text>
+              <Text style={styles.countValue}>{executions.length}回</Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📜</Text>
             <Text style={styles.emptyText}>{Strings.noHistory}</Text>
           </View>
         }
@@ -46,21 +52,46 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   list: {
-    padding: 16,
+    padding: 20,
     gap: 12,
     paddingBottom: 24,
     flexGrow: 1,
   },
+  countCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
+  },
+  countLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  countValue: {
+    fontFamily: 'Georgia',
+    fontSize: 20,
+    fontWeight: '500',
+    color: Colors.text,
+  },
   itemCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 16,
     gap: 6,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -78,12 +109,7 @@ const styles = StyleSheet.create({
   },
   itemDate: {
     fontSize: 12,
-    color: Colors.textHint,
-    marginLeft: 22,
-  },
-  itemMemo: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
     marginLeft: 22,
   },
   empty: {
@@ -93,14 +119,10 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 60,
   },
-  emptyIcon: {
-    fontSize: 48,
-    opacity: 0.3,
-  },
   emptyText: {
     fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 21,
+    lineHeight: 22,
   },
 });

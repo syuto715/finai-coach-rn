@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../src/constants/colors';
-import { loadProfile } from '../src/services/storage';
 
 export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -20,7 +20,8 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             title: '支出を追加',
-            headerTintColor: Colors.primary,
+            headerTintColor: Colors.secondary,
+            headerStyle: { backgroundColor: Colors.background },
             presentation: 'modal',
           }}
         />
@@ -29,7 +30,15 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             title: 'サブスクを追加',
-            headerTintColor: Colors.primary,
+            headerTintColor: Colors.secondary,
+            headerStyle: { backgroundColor: Colors.background },
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="manage-categories"
+          options={{
+            headerShown: false,
             presentation: 'modal',
           }}
         />

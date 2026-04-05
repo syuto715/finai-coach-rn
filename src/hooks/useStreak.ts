@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { ExecutionRecord } from '../models/execution-record';
+import { Colors } from '../constants/colors';
 
 export function useStreak(executions: ExecutionRecord[]) {
   const streak = useMemo(() => {
@@ -42,7 +43,7 @@ export function useStreak(executions: ExecutionRecord[]) {
     return count;
   }, [executions]);
 
-  const streakColor = streak === 0 ? '#9E9E9E' : streak < 3 ? '#FF8F00' : '#E53935';
+  const streakColor = streak === 0 ? Colors.textTertiary : streak < 3 ? Colors.secondary : Colors.error;
   const streakLabel = streak >= 3 ? `${streak}ヶ月連続達成！` : `${streak}ヶ月`;
 
   return { streak, streakColor, streakLabel };

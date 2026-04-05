@@ -5,12 +5,14 @@ import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useExpenses } from '../../src/hooks/useExpenses';
+import { useCategories } from '../../src/hooks/useCategories';
 import { FixedCostScore } from '../../src/components/FixedCostScore';
+import { EvidenceCard } from '../../src/components/EvidenceCard';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
-import { formatNumber, formatMonthJP } from '../../src/utils/calculations';
+import { formatNumber } from '../../src/utils/calculations';
 import { evidenceSources } from '../../src/constants/evidence-sources';
 
-const screenWidth = Dimensions.get('window').width - 72;
+const screenWidth = Dimensions.get('window').width - 80;
 
 const chartColors = [
   Colors.primary, '#2196F3', Colors.secondary, Colors.error,
@@ -20,6 +22,7 @@ const chartColors = [
 export default function AnalysisScreen() {
   const { profile } = useProfile();
   const { expenses, currentMonthExpenses, categoryTotals, totalThisMonth, fixedThisMonth } = useExpenses();
+  const { getCategoryName } = useCategories();
 
   // Past 3 months bar data
   const now = new Date();
@@ -40,13 +43,13 @@ export default function AnalysisScreen() {
     datasets: [{ data: past3.map((m) => m.total || 0) }],
   };
 
-  // Pie data
+  // Pie data - use dynamic category names
   const catEntries = Object.entries(categoryTotals)
     .filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a);
 
   const pieData = catEntries.map(([key, value], i) => ({
-    name: Strings.categories[key] ?? key,
+    name: getCategoryName(key),
     amount: value,
     color: chartColors[i % chartColors.length],
     legendFontColor: Colors.textSecondary,
@@ -122,7 +125,7 @@ export default function AnalysisScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>固定費一覧</Text>
           {fixedExpenses.length === 0 ? (
-            <Text style={styles.emptyText}>固定費データがありません。支出入力時に「固定費」フラグを設定してください。</Text>
+            <Text style={styles.emptyText}>固定費データがありません</Text>
           ) : (
             <>
               <View style={styles.totalRow}>
@@ -131,7 +134,7 @@ export default function AnalysisScreen() {
               </View>
               {fixedExpenses.map((e) => (
                 <View key={e.id} style={styles.fixedRow}>
-                  <Text style={styles.fixedLabel}>{e.label || (Strings.categories[e.category] ?? e.category)}</Text>
+                  <Text style={styles.fixedLabel}>{e.label || getCategoryName(e.category)}</Text>
                   <Text style={styles.fixedAmount}>¥{formatNumber(e.amount)}</Text>
                 </View>
               ))}
@@ -140,16 +143,11 @@ export default function AnalysisScreen() {
         </View>
 
         {/* Evidence */}
-        <View style={styles.evidenceBox}>
-          <Text style={styles.evidenceIcon}>ℹ️</Text>
-          <View style={styles.evidenceContent}>
-            <Text style={styles.evidenceTitle}>参考統計：{src.name}</Text>
-            <Text style={styles.evidenceDesc}>
-              2人以上世帯の平均月支出は約28万円（食費・住居・光熱費含む）。
-              カテゴリ別平均との比較でムダを特定します。
-            </Text>
-          </View>
-        </View>
+        <EvidenceCard
+          sourceName={src.name}
+          publishedAt={src.publishedAt}
+          url={src.url}
+        />
       </ScrollView>
       <DisclaimerFooter />
     </View>
@@ -162,24 +160,26 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    padding: 20,
     gap: 16,
     paddingBottom: 24,
   },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 20,
     gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 16,
+    fontWeight: '500',
     color: Colors.text,
   },
   totalRow: {
@@ -192,18 +192,22 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   totalValue: {
+    fontFamily: 'Georgia',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
     color: Colors.text,
   },
   emptyText: {
-    fontSize: 12,
-    color: Colors.textHint,
+    fontSize: 14,
+    color: Colors.textTertiary,
+    paddingVertical: 8,
   },
   fixedRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
   fixedLabel: {
     fontSize: 14,
@@ -213,31 +217,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.text,
-  },
-  evidenceBox: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surfaceVariant,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.primary + '26',
-    padding: 14,
-    gap: 8,
-  },
-  evidenceIcon: {
-    fontSize: 14,
-  },
-  evidenceContent: {
-    flex: 1,
-    gap: 2,
-  },
-  evidenceTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  evidenceDesc: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    lineHeight: 18,
   },
 });

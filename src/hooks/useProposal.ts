@@ -3,6 +3,7 @@ import type { ActionProposal } from '../models/action-proposal';
 import type { Expense } from '../models/expense';
 import type { Subscription } from '../models/subscription';
 import type { UserProfile } from '../models/user-profile';
+import type { ExpenseCategory } from '../models/category';
 import { loadProposals, saveProposals } from '../services/storage';
 import { generateProposal } from '../services/rule-engine';
 
@@ -10,6 +11,7 @@ export function useProposal(
   expenses: Expense[],
   subscriptions: Subscription[],
   profile: UserProfile | null,
+  categories?: ExpenseCategory[],
 ) {
   const [proposals, setProposals] = useState<ActionProposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,12 +38,12 @@ export function useProposal(
 
   const generate = useCallback(async () => {
     if (!profile || !canGenerate) return null;
-    const proposal = generateProposal({ expenses, subscriptions, profile });
+    const proposal = generateProposal({ expenses, subscriptions, profile, categories });
     const next = [...proposals, proposal];
     setProposals(next);
     await saveProposals(next);
     return proposal;
-  }, [expenses, subscriptions, profile, proposals, canGenerate]);
+  }, [expenses, subscriptions, profile, categories, proposals, canGenerate]);
 
   const markExecuted = useCallback(
     async (id: string) => {

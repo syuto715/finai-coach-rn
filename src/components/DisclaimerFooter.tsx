@@ -13,17 +13,15 @@ export function DisclaimerFooter() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.disclaimerBg,
-    borderTopWidth: 0.5,
-    borderTopColor: Colors.disclaimerBorder,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
   text: {
-    color: Colors.disclaimerText,
-    fontSize: 10,
-    lineHeight: 14,
+    color: Colors.textTertiary,
+    fontSize: 11,
+    lineHeight: 16,
     textAlign: 'center',
-    letterSpacing: 0.2,
   },
 });

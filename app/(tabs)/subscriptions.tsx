@@ -20,10 +20,10 @@ export default function SubscriptionsScreen() {
   } = useSubscriptions();
 
   const handleDelete = (sub: Subscription) => {
-    Alert.alert('サブスクを解約', `「${sub.name}」を解約済みにしますか？`, [
+    Alert.alert('サブスクを削除', `「${sub.name}」を削除しますか？`, [
       { text: 'キャンセル', style: 'cancel' },
       {
-        text: '解約する',
+        text: '削除する',
         style: 'destructive',
         onPress: () => deleteSubscription(sub.id),
       },
@@ -34,14 +34,11 @@ export default function SubscriptionsScreen() {
     const isUnused = !item.lastUsedDate || (Date.now() - new Date(item.lastUsedDate).getTime()) / 86400000 > 30;
 
     return (
-      <View style={styles.itemCard}>
+      <Pressable style={styles.itemCard} onLongPress={() => handleDelete(item)}>
         <View style={styles.itemHeader}>
           <CategoryIcon category={item.category} size={36} />
           <View style={styles.itemInfo}>
-            <View style={styles.nameRow}>
-              {isUnused && <Text style={styles.warningBadge}>⚠️</Text>}
-              <Text style={styles.itemName}>{item.name}</Text>
-            </View>
+            <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.itemCategory}>
               {Strings.subCategories[item.category] ?? item.category}
             </Text>
@@ -50,22 +47,28 @@ export default function SubscriptionsScreen() {
         </View>
 
         {item.lastUsedDate && (
-          <Text style={[styles.lastUsed, isUnused && { color: Colors.warning }]}>
+          <Text style={[styles.lastUsed, isUnused && styles.lastUsedWarning]}>
             最後に使用: {formatDateJP(item.lastUsedDate)}
           </Text>
+        )}
+
+        {isUnused && (
+          <View style={styles.unusedBadge}>
+            <Text style={styles.unusedText}>⚠️ 30日以上未使用</Text>
+          </View>
         )}
 
         {item.memo ? <Text style={styles.memo}>{item.memo}</Text> : null}
 
         <View style={styles.actions}>
           <Pressable style={styles.usedButton} onPress={() => updateLastUsed(item.id)}>
-            <Text style={styles.usedButtonText}>✓ 使った</Text>
+            <Text style={styles.usedButtonText}>使った</Text>
           </Pressable>
           <Pressable style={styles.deleteButton} onPress={() => handleDelete(item)}>
-            <Text style={styles.deleteButtonText}>解約</Text>
+            <Text style={styles.deleteButtonText}>削除</Text>
           </Pressable>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -77,34 +80,23 @@ export default function SubscriptionsScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          <>
-            {/* Total Card */}
-            <View style={styles.totalCard}>
-              <Text style={styles.totalMonthly}>月 {formatNumber(totalMonthly)}円</Text>
-              <Text style={styles.totalAnnual}>年 {formatNumber(totalMonthly * 12)}円</Text>
-            </View>
-
-            {/* Unused alert */}
-            {unusedSubs.length > 0 && (
-              <View style={styles.alertBox}>
-                <Text style={styles.alertIcon}>⚠️</Text>
-                <Text style={styles.alertText}>
-                  {unusedSubs.length}件のサブスクが30日以上使われていません
-                </Text>
-              </View>
-            )}
-          </>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalLabel}>月</Text>
+            <Text style={styles.totalMonthly}>¥{formatNumber(totalMonthly)}</Text>
+            <Text style={styles.totalAnnual}>/ 年 ¥{formatNumber(totalMonthly * 12)}</Text>
+          </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📱</Text>
-            <Text style={styles.emptyText}>{Strings.noSubscriptions}</Text>
+            <Text style={styles.emptyText}>サブスクを登録して棚卸ししましょう</Text>
           </View>
         }
         ListFooterComponent={
-          <Pressable style={styles.addButton} onPress={() => router.push('/add-subscription')}>
-            <Text style={styles.addButtonText}>{Strings.addSubscription}</Text>
-          </Pressable>
+          <>
+            <Pressable style={styles.addButton} onPress={() => router.push('/add-subscription')}>
+              <Text style={styles.addButtonText}>{Strings.addSubscription}</Text>
+            </Pressable>
+          </>
         }
       />
       <DisclaimerFooter />
@@ -118,54 +110,62 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   list: {
-    padding: 16,
+    padding: 20,
     gap: 12,
     paddingBottom: 24,
   },
   totalCard: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 20,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
+  },
+  totalLabel: {
+    fontSize: 16,
+    color: Colors.textSecondary,
   },
   totalMonthly: {
+    fontFamily: 'Georgia',
     fontSize: 28,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    fontWeight: '500',
+    color: Colors.text,
   },
   totalAnnual: {
-    fontSize: 15,
-    color: '#FFFFFFCC',
+    fontSize: 14,
+    color: Colors.textTertiary,
   },
-  alertBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.warning + '1A',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.warning + '4D',
-    padding: 12,
-    gap: 8,
+  unusedBadge: {
+    backgroundColor: 'rgba(249,168,37,0.10)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
-  alertIcon: {
-    fontSize: 16,
-  },
-  alertText: {
-    flex: 1,
+  unusedText: {
     fontSize: 12,
     color: Colors.warning,
+    fontWeight: '600',
   },
   itemCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 16,
     gap: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -174,14 +174,6 @@ const styles = StyleSheet.create({
   },
   itemInfo: {
     flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  warningBadge: {
-    fontSize: 12,
   },
   itemName: {
     fontSize: 14,
@@ -193,17 +185,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   itemPrice: {
+    fontFamily: 'Georgia',
     fontSize: 14,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontWeight: '500',
+    color: Colors.secondary,
   },
   lastUsed: {
     fontSize: 12,
-    color: Colors.textHint,
+    color: Colors.textTertiary,
+  },
+  lastUsedWarning: {
+    color: Colors.warning,
   },
   memo: {
     fontSize: 12,
-    color: Colors.textHint,
+    color: Colors.textTertiary,
   },
   actions: {
     flexDirection: 'row',
@@ -239,23 +235,19 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     gap: 12,
   },
-  emptyIcon: {
-    fontSize: 48,
-    opacity: 0.3,
-  },
   emptyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
   },
   addButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 15,
     fontWeight: '700',
   },

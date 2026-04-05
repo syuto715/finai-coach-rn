@@ -55,15 +55,21 @@ export const Strings = {
   disclaimerFooter: '本アプリの情報は一般論・教育目的であり、投資助言ではありません。',
   consultExpert: '重要な金融判断は、FP（ファイナンシャルプランナー）等の専門家にご相談ください。',
 
-  // categories
+  // categories (fallback labels for legacy data)
   categories: {
     fixed: '固定費',
     food: '食費',
+    'eating-out': '外食費',
+    daily: '日用品',
     transport: '交通費',
     utility: '光熱費',
+    clothing: '衣服',
+    social: '交際費',
+    hobby: '趣味',
     entertainment: '娯楽',
     subscription: 'サブスク',
     other: 'その他',
+    hair: '髪の毛',
   } as Record<string, string>,
 
   subCategories: {

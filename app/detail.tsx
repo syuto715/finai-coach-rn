@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../src/constants/colors';
 import { Strings } from '../src/constants/strings';
 import { useProposal } from '../src/hooks/useProposal';
 import { useExpenses } from '../src/hooks/useExpenses';
 import { useSubscriptions } from '../src/hooks/useSubscriptions';
 import { useProfile } from '../src/hooks/useProfile';
+import { useCategories } from '../src/hooks/useCategories';
 import { useExecutions } from '../src/hooks/useExecutions';
 import { TrustBadge } from '../src/components/TrustBadge';
 import { EvidenceCard } from '../src/components/EvidenceCard';
@@ -18,10 +20,14 @@ export default function DetailScreen() {
   const { profile } = useProfile();
   const { expenses } = useExpenses();
   const { subscriptions } = useSubscriptions();
-  const { proposals, markExecuted } = useProposal(expenses, subscriptions, profile);
+  const { categories } = useCategories();
+  const { proposals, markExecuted } = useProposal(expenses, subscriptions, profile, categories);
   const { addExecution } = useExecutions();
 
-  const proposal = proposals.find((p) => p.id === id);
+  // Find by id, or fallback to latest proposal
+  const proposal = id
+    ? proposals.find((p) => p.id === id)
+    : proposals.length > 0 ? proposals[proposals.length - 1] : null;
 
   if (!proposal) {
     return (
@@ -40,6 +46,7 @@ export default function DetailScreen() {
       {
         text: Strings.actionDone,
         onPress: async () => {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           await markExecuted(proposal.id);
           await addExecution(proposal.id, proposal.title);
           router.back();
@@ -47,8 +54,6 @@ export default function DetailScreen() {
       },
     ]);
   };
-
-  const scopeText = proposal.applicableScope || '一般的な傾向に基づく参考情報です';
 
   return (
     <View style={styles.container}>
@@ -60,8 +65,12 @@ export default function DetailScreen() {
           </Pressable>
         </View>
 
+        {/* Hero */}
         <View style={styles.heroCard}>
-          <Text style={styles.heroTitle}>{proposal.title}</Text>
+          <View style={styles.heroAccent} />
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>{proposal.title}</Text>
+          </View>
         </View>
 
         {/* Body */}
@@ -80,12 +89,12 @@ export default function DetailScreen() {
           <View style={styles.divider} />
           <View style={styles.trustRow}>
             <Text style={styles.trustLabel}>適用範囲</Text>
-            <Text style={styles.trustValue}>{scopeText}</Text>
+            <Text style={styles.trustValue}>{proposal.applicableScope}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.trustRow}>
-            <Text style={styles.trustLabel}>専門家相談</Text>
-            <Text style={styles.trustValue}>{Strings.consultExpert}</Text>
+            <Text style={styles.trustLabel}>専門家コメント</Text>
+            <Text style={styles.trustValue}>{proposal.expertNote}</Text>
           </View>
         </View>
 
@@ -101,8 +110,7 @@ export default function DetailScreen() {
         {/* Done button */}
         {proposal.isExecuted ? (
           <View style={styles.doneBanner}>
-            <Text style={styles.doneIcon}>✅</Text>
-            <Text style={styles.doneText}>実行済みです！素晴らしい！</Text>
+            <Text style={styles.doneBannerText}>✅ 実行済み</Text>
           </View>
         ) : (
           <Pressable style={styles.doneButton} onPress={handleDone}>
@@ -121,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    padding: 20,
     gap: 16,
     paddingBottom: 24,
   },
@@ -130,19 +138,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
+    backgroundColor: Colors.background,
   },
   errorText: {
     fontSize: 16,
     color: Colors.textSecondary,
   },
   backButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
   },
   backButtonText: {
-    color: '#FFF',
+    color: Colors.textOnBrand,
     fontWeight: '700',
   },
   headerBar: {
@@ -151,37 +160,54 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: Colors.primary,
+    color: Colors.secondary,
     fontWeight: '700',
   },
   heroCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
+  },
+  heroAccent: {
+    height: 4,
+    backgroundColor: Colors.secondary,
+  },
+  heroContent: {
     padding: 24,
   },
   heroTitle: {
+    fontFamily: 'Georgia',
     fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontWeight: '500',
+    color: Colors.text,
+    lineHeight: 26,
   },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 20,
     gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Georgia',
+    fontSize: 16,
+    fontWeight: '500',
     color: Colors.text,
   },
   bodyText: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.text,
     lineHeight: 24,
   },
@@ -191,33 +217,26 @@ const styles = StyleSheet.create({
   trustLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textHint,
+    color: Colors.textTertiary,
   },
   trustValue: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   divider: {
     height: 1,
     backgroundColor: Colors.border,
   },
   doneBanner: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.success + '14',
+    backgroundColor: 'rgba(46,125,50,0.10)',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.success + '4D',
     padding: 20,
-    gap: 8,
   },
-  doneIcon: {
-    fontSize: 24,
-  },
-  doneText: {
-    fontSize: 15,
+  doneBannerText: {
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.success,
   },
@@ -228,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneButtonText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 18,
     fontWeight: '800',
   },

@@ -12,82 +12,46 @@ interface Props {
 export function EvidenceCard({ sourceName, publishedAt, url, userComparison }: Props) {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.icon}>📚</Text>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>根拠元：{sourceName}（{publishedAt}）</Text>
-        </View>
-      </View>
+      <Text style={styles.title}>参考：{sourceName}</Text>
+      <Text style={styles.date}>{publishedAt}</Text>
 
       {userComparison ? (
-        <View style={styles.comparison}>
-          <Text style={styles.comparisonLabel}>あなたのデータとの比較</Text>
-          <Text style={styles.comparisonText}>{userComparison}</Text>
-        </View>
+        <Text style={styles.comparison}>{userComparison}</Text>
       ) : null}
 
-      <View style={styles.urlBox}>
-        <Text style={styles.urlIcon}>🔗</Text>
-        <Text style={styles.urlText} numberOfLines={2}>{url}</Text>
-      </View>
+      <Text style={styles.url} numberOfLines={2}>{url}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.border,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.primary + '1F',
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.secondary,
     padding: 16,
-    gap: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  icon: {
-    fontSize: 14,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  comparison: {
     gap: 4,
   },
-  comparisonLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primary,
+  title: {
+    fontFamily: 'Georgia',
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.text,
   },
-  comparisonText: {
+  date: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+  },
+  comparison: {
     fontSize: 12,
     color: Colors.textSecondary,
     lineHeight: 18,
+    marginTop: 4,
   },
-  urlBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary + '0D',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.primary + '33',
-    padding: 10,
-    gap: 6,
-  },
-  urlIcon: {
-    fontSize: 12,
-  },
-  urlText: {
-    flex: 1,
+  url: {
     fontSize: 11,
-    color: Colors.primary,
+    color: Colors.textTertiary,
+    marginTop: 4,
   },
 });

@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useExpenses } from '../../src/hooks/useExpenses';
 import { useSubscriptions } from '../../src/hooks/useSubscriptions';
+import { useCategories } from '../../src/hooks/useCategories';
 import { useProposal } from '../../src/hooks/useProposal';
 import { useExecutions } from '../../src/hooks/useExecutions';
 import { useStreak } from '../../src/hooks/useStreak';
@@ -20,10 +22,12 @@ export default function HomeScreen() {
   const { profile } = useProfile();
   const { expenses, currentMonthExpenses } = useExpenses();
   const { subscriptions } = useSubscriptions();
+  const { categories } = useCategories();
   const { currentProposal, generate, markExecuted, canGenerate } = useProposal(
     expenses,
     subscriptions,
     profile,
+    categories,
   );
   const { executions, addExecution } = useExecutions();
   const { streak, streakColor, streakLabel } = useStreak(executions);
@@ -35,8 +39,10 @@ export default function HomeScreen() {
     await addExecution(currentProposal.id, currentProposal.title);
   };
 
+  const hasExpenses = currentMonthExpenses.length > 0;
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
@@ -47,13 +53,17 @@ export default function HomeScreen() {
         </View>
 
         {/* Weekly Budget */}
-        {budget.weeklyBudget > 0 && (
+        {budget.weeklyBudget > 0 ? (
           <WeeklyBudget
             remaining={budget.remaining}
             weeklyBudget={budget.weeklyBudget}
             progress={budget.progress}
             isLow={budget.isLow}
           />
+        ) : hasExpenses ? null : (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>支出を記録すると予算が表示されます</Text>
+          </View>
         )}
 
         {/* Action Card */}
@@ -67,11 +77,17 @@ export default function HomeScreen() {
             />
           ) : (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>{Strings.noProposal}</Text>
-              {canGenerate && (
-                <Pressable style={styles.generateButton} onPress={generate}>
-                  <Text style={styles.generateText}>{Strings.generateProposal}</Text>
-                </Pressable>
+              {!hasExpenses ? (
+                <Text style={styles.emptyText}>まず支出を記録しましょう</Text>
+              ) : (
+                <>
+                  <Text style={styles.emptyText}>{Strings.noProposal}</Text>
+                  {canGenerate && (
+                    <Pressable style={styles.generateButton} onPress={generate}>
+                      <Text style={styles.generateText}>{Strings.generateProposal}</Text>
+                    </Pressable>
+                  )}
+                </>
               )}
             </View>
           )}
@@ -83,7 +99,7 @@ export default function HomeScreen() {
         </Pressable>
       </ScrollView>
       <DisclaimerFooter />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -93,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    padding: 20,
     gap: 16,
     paddingBottom: 24,
   },
@@ -103,42 +119,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greeting: {
+    fontFamily: 'Georgia',
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '500',
     color: Colors.text,
+    flex: 1,
   },
   section: {
     gap: 12,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.textSecondary,
   },
   emptyCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: 24,
     alignItems: 'center',
     gap: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textHint,
+    color: Colors.textTertiary,
   },
   generateButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
+    backgroundColor: Colors.secondary,
+    borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 14,
   },
   generateText: {
-    color: '#FFFFFF',
+    color: Colors.textOnBrand,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -146,12 +165,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: Colors.secondary,
     paddingVertical: 14,
     alignItems: 'center',
   },
   addButtonText: {
-    color: Colors.primary,
+    color: Colors.secondary,
     fontSize: 15,
     fontWeight: '700',
   },

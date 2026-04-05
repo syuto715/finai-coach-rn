@@ -7,7 +7,7 @@ export function useWeeklyBudget(profile: UserProfile, currentMonthExpenses: Expe
     const monthlyBudget = profile.monthlyExpenseTarget > 0
       ? profile.monthlyExpenseTarget
       : profile.monthlyIncome > 0
-        ? Math.round(profile.monthlyIncome * 0.7)
+        ? Math.round(profile.monthlyIncome * 0.8)
         : 0;
 
     if (monthlyBudget <= 0) {
@@ -16,8 +16,13 @@ export function useWeeklyBudget(profile: UserProfile, currentMonthExpenses: Expe
 
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const weeksInMonth = Math.ceil(daysInMonth / 7);
-    const weeklyBudget = Math.round(monthlyBudget / weeksInMonth);
+    const remainingDays = daysInMonth - now.getDate() + 1;
+    const remainingWeeks = Math.max(Math.ceil(remainingDays / 7), 1);
+
+    // This month's total spent so far
+    const totalSpent = currentMonthExpenses.reduce((s, e) => s + e.amount, 0);
+    const remainingBudget = Math.max(monthlyBudget - totalSpent, 0);
+    const weeklyBudget = Math.round(remainingBudget / remainingWeeks);
 
     // Current week start (Monday)
     const dayOfWeek = now.getDay();

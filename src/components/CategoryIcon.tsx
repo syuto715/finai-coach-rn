@@ -2,15 +2,22 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
 
-const icons: Record<string, string> = {
+// Fallback icons for known category IDs
+const fallbackIcons: Record<string, string> = {
   fixed: '🏠',
-  food: '🍽️',
-  transport: '🚃',
+  food: '🍚',
+  'eating-out': '🍽️',
+  daily: '🧴',
+  transport: '🚗',
   utility: '⚡',
+  clothing: '👕',
+  social: '🤝',
+  hobby: '🎮',
   entertainment: '🎬',
-  subscription: '📱',
   other: '📦',
-  video: '🎥',
+  hair: '💇',
+  subscription: '📱',
+  video: '🎬',
   music: '🎵',
   news: '📰',
   tool: '🔧',
@@ -19,20 +26,22 @@ const icons: Record<string, string> = {
 
 interface Props {
   category: string;
+  emoji?: string;
   size?: number;
 }
 
-export function CategoryIcon({ category, size = 36 }: Props) {
+export function CategoryIcon({ category, emoji, size = 36 }: Props) {
+  const displayEmoji = emoji ?? fallbackIcons[category] ?? '📦';
   return (
     <View style={[styles.container, { width: size, height: size, borderRadius: size / 3 }]}>
-      <Text style={{ fontSize: size * 0.45 }}>{icons[category] ?? '📦'}</Text>
+      <Text style={{ fontSize: size * 0.45 }}>{displayEmoji}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surfaceVariant,
+    backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
