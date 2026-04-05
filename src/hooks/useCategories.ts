@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuid } from 'uuid';
+import { generateId } from '../utils/generateId';
 import type { ExpenseCategory } from '../models/category';
 import { DEFAULT_CATEGORIES } from '../constants/default-categories';
 import { loadCategories, saveCategories } from '../services/storage';
@@ -27,7 +27,7 @@ export function useCategories() {
     async (name: string, emoji: string, isFixed: boolean) => {
       const maxOrder = categories.reduce((max, c) => Math.max(max, c.order), 0);
       const cat: ExpenseCategory = {
-        id: uuid(),
+        id: generateId(),
         name,
         emoji,
         isFixed,

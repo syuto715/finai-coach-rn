@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { generateId } from '../utils/generateId';
 import type { ActionProposal } from '../models/action-proposal';
 import type { Expense } from '../models/expense';
 import type { Subscription } from '../models/subscription';
@@ -79,7 +79,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
 
     return {
       ...base,
-      id: uuid(),
+      id: generateId(),
       createdAt: now.toISOString(),
       title: '固定費を1つ見直しましょう',
       body: `固定費が支出の${pct}%を占めています。まずは一番高い${topLabel}（月${fmt(topAmt)}円）の見直しから。`,
@@ -94,7 +94,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
     const annual = subTotal * 12;
     return {
       ...base,
-      id: uuid(),
+      id: generateId(),
       createdAt: now.toISOString(),
       title: 'サブスクを1つ整理しましょう',
       body: `月${fmt(subTotal)}円のサブスクがあります。使用頻度が低いものを1つ解約するだけで年${fmt(annual)}円の節約に。`,
@@ -110,7 +110,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
     const weeklyBudget = Math.round(78000 / 4.3);
     return {
       ...base,
-      id: uuid(),
+      id: generateId(),
       createdAt: now.toISOString(),
       title: '食費を週単位で管理しましょう',
       body: `食費が月${fmt(foodTotal)}円で、同世代平均より${avgDiff}%高めです。週${fmt(weeklyBudget)}円の予算で管理してみましょう。`,
@@ -124,7 +124,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
   if (entRatio > 0.15 && total > 0) {
     return {
       ...base,
-      id: uuid(),
+      id: generateId(),
       createdAt: now.toISOString(),
       title: '今月の楽しみ方を1つ変えてみましょう',
       body: `娯楽費が支出の${Math.round(entRatio * 100)}%を占めています。無料や低コストの代替を1つ試してみましょう。`,
@@ -139,7 +139,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
     const monthlyTarget = Math.round((fundTarget - profile.cashBalance) / 6 / 10000);
     return {
       ...base,
-      id: uuid(),
+      id: generateId(),
       createdAt: now.toISOString(),
       title: `今月は${monthlyTarget > 0 ? monthlyTarget : 1}万円を生活防衛資金に回しましょう`,
       body: `生活防衛資金の進捗は${Math.round(fundProgress * 100)}%です。まずは目標の50%を目指しましょう。`,
@@ -152,7 +152,7 @@ export function generateProposal(input: RuleInput): ActionProposal {
   // Rule 6: Default
   return {
     ...base,
-    id: uuid(),
+    id: generateId(),
     createdAt: now.toISOString(),
     title: '支出の記録を続けましょう',
     body: 'データが蓄積されると、より具体的なアドバイスをお届けできます。まずは1週間、毎日の支出を記録してみましょう。',

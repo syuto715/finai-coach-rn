@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuid } from 'uuid';
+import { generateId } from '../utils/generateId';
 import type { Subscription } from '../models/subscription';
 import { loadSubscriptions, saveSubscriptions } from '../services/storage';
 
@@ -16,7 +16,7 @@ export function useSubscriptions() {
 
   const addSubscription = useCallback(
     async (input: Omit<Subscription, 'id' | 'isActive'>) => {
-      const sub: Subscription = { ...input, id: uuid(), isActive: true };
+      const sub: Subscription = { ...input, id: generateId(), isActive: true };
       const next = [...subscriptions, sub];
       setSubscriptions(next);
       await saveSubscriptions(next);

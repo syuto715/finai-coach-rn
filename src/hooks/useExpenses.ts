@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuid } from 'uuid';
+import { generateId } from '../utils/generateId';
 import type { Expense } from '../models/expense';
 import { loadExpenses, saveExpenses } from '../services/storage';
 
@@ -16,7 +16,7 @@ export function useExpenses() {
 
   const addExpense = useCallback(
     async (input: Omit<Expense, 'id'>) => {
-      const expense: Expense = { ...input, id: uuid() };
+      const expense: Expense = { ...input, id: generateId() };
       const next = [...expenses, expense];
       setExpenses(next);
       await saveExpenses(next);
