@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useProfile } from '../../src/hooks/useProfile';
@@ -19,19 +20,29 @@ import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile } = useProfile();
-  const { expenses, currentMonthExpenses } = useExpenses();
-  const { subscriptions } = useSubscriptions();
+  const { profile, reload: reloadProfile } = useProfile();
+  const { expenses, currentMonthExpenses, reload: reloadExpenses } = useExpenses();
+  const { subscriptions, reload: reloadSubscriptions } = useSubscriptions();
   const { categories } = useCategories();
-  const { currentProposal, generate, markExecuted, canGenerate } = useProposal(
+  const { currentProposal, generate, markExecuted, canGenerate, reload: reloadProposals } = useProposal(
     expenses,
     subscriptions,
     profile,
     categories,
   );
-  const { executions, addExecution } = useExecutions();
+  const { executions, addExecution, reload: reloadExecutions } = useExecutions();
   const { streak, streakColor, streakLabel } = useStreak(executions);
   const budget = useWeeklyBudget(profile, currentMonthExpenses);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadProfile();
+      reloadExpenses();
+      reloadSubscriptions();
+      reloadProposals();
+      reloadExecutions();
+    }, [reloadProfile, reloadExpenses, reloadSubscriptions, reloadProposals, reloadExecutions]),
+  );
 
   const handleDone = async () => {
     if (!currentProposal) return;

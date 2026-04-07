@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
@@ -20,9 +21,16 @@ const chartColors = [
 ];
 
 export default function AnalysisScreen() {
-  const { profile } = useProfile();
-  const { expenses, currentMonthExpenses, categoryTotals, totalThisMonth, fixedThisMonth } = useExpenses();
+  const { profile, reload: reloadProfile } = useProfile();
+  const { expenses, currentMonthExpenses, categoryTotals, totalThisMonth, fixedThisMonth, reload: reloadExpenses } = useExpenses();
   const { getCategoryName } = useCategories();
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadProfile();
+      reloadExpenses();
+    }, [reloadProfile, reloadExpenses]),
+  );
 
   // Past 3 months bar data
   const now = new Date();

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useExecutions } from '../../src/hooks/useExecutions';
@@ -8,7 +9,13 @@ import { formatDateSlash } from '../../src/utils/calculations';
 import type { ExecutionRecord } from '../../src/models/execution-record';
 
 export default function HistoryScreen() {
-  const { executions } = useExecutions();
+  const { executions, reload: reloadExecutions } = useExecutions();
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadExecutions();
+    }, [reloadExecutions]),
+  );
 
   const renderItem = ({ item }: { item: ExecutionRecord }) => (
     <View style={styles.itemCard}>

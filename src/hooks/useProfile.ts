@@ -7,12 +7,15 @@ export function useProfile() {
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProfile().then((data) => {
-      if (data) setProfile(data);
-      setLoading(false);
-    });
+  const reload = useCallback(async () => {
+    const data = await loadProfile();
+    if (data) setProfile(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const updateProfile = useCallback(
     async (partial: Partial<UserProfile>) => {
@@ -33,6 +36,7 @@ export function useProfile() {
     loading,
     updateProfile,
     completeOnboarding,
+    reload,
     isOnboardingDone: profile.onboardingCompleted,
   };
 }

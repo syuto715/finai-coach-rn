@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, Pressable, Modal, TextInput, StyleSheet,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '../../src/constants/colors';
 import { useProfile } from '../../src/hooks/useProfile';
@@ -12,8 +13,14 @@ import { formatNumber, toMan } from '../../src/utils/calculations';
 const targetMonthOptions = [3, 4, 5, 6];
 
 export default function MeterScreen() {
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile, reload: reloadProfile } = useProfile();
   const fund = useDefenseFund(profile);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadProfile();
+    }, [reloadProfile]),
+  );
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [inputAmount, setInputAmount] = useState('');

@@ -7,12 +7,15 @@ export function useExecutions() {
   const [executions, setExecutions] = useState<ExecutionRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadExecutions().then((data) => {
-      setExecutions(data);
-      setLoading(false);
-    });
+  const reload = useCallback(async () => {
+    const data = await loadExecutions();
+    setExecutions(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const addExecution = useCallback(
     async (proposalId: string, proposalTitle: string, memo: string = '') => {
@@ -39,5 +42,6 @@ export function useExecutions() {
     executions: sortedExecutions,
     loading,
     addExecution,
+    reload,
   };
 }

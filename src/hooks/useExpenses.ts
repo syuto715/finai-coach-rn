@@ -7,12 +7,15 @@ export function useExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadExpenses().then((data) => {
-      setExpenses(data);
-      setLoading(false);
-    });
+  const reload = useCallback(async () => {
+    const data = await loadExpenses();
+    setExpenses(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const addExpense = useCallback(
     async (input: Omit<Expense, 'id'>) => {
@@ -53,6 +56,7 @@ export function useExpenses() {
     loading,
     addExpense,
     deleteExpense,
+    reload,
     currentMonthExpenses,
     categoryTotals,
     totalThisMonth,

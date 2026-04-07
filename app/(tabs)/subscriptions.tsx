@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 import { useSubscriptions } from '../../src/hooks/useSubscriptions';
@@ -17,7 +18,14 @@ export default function SubscriptionsScreen() {
     unusedSubs,
     updateLastUsed,
     deleteSubscription,
+    reload: reloadSubscriptions,
   } = useSubscriptions();
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadSubscriptions();
+    }, [reloadSubscriptions]),
+  );
 
   const handleDelete = (sub: Subscription) => {
     Alert.alert('サブスクを削除', `「${sub.name}」を削除しますか？`, [

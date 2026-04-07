@@ -7,12 +7,15 @@ export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSubscriptions().then((data) => {
-      setSubscriptions(data);
-      setLoading(false);
-    });
+  const reload = useCallback(async () => {
+    const data = await loadSubscriptions();
+    setSubscriptions(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const addSubscription = useCallback(
     async (input: Omit<Subscription, 'id' | 'isActive'>) => {
@@ -62,6 +65,7 @@ export function useSubscriptions() {
     addSubscription,
     deleteSubscription,
     updateLastUsed,
+    reload,
     totalMonthly,
     unusedSubs,
   };

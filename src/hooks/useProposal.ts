@@ -16,12 +16,15 @@ export function useProposal(
   const [proposals, setProposals] = useState<ActionProposal[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProposals().then((data) => {
-      setProposals(data);
-      setLoading(false);
-    });
+  const reload = useCallback(async () => {
+    const data = await loadProposals();
+    setProposals(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const now = new Date();
   const currentMonthProposals = proposals.filter((p) => {
@@ -62,6 +65,7 @@ export function useProposal(
     loading,
     generate,
     markExecuted,
+    reload,
     canGenerate,
     monthlyCount,
   };
