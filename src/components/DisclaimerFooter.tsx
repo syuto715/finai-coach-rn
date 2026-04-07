@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
     paddingHorizontal: 20,
     paddingVertical: 8,
+    backgroundColor: Colors.background,
   },
   text: {
     color: Colors.textTertiary,

@@ -2,12 +2,15 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, Pressable, Modal, TextInput, StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '../../src/constants/colors';
+import { Shadows } from '../../src/constants/shadows';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useDefenseFund } from '../../src/hooks/useDefenseFund';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
+import { Button } from '../../src/components/Button';
 import { formatNumber, toMan } from '../../src/utils/calculations';
 
 const targetMonthOptions = [3, 4, 5, 6];
@@ -29,8 +32,8 @@ export default function MeterScreen() {
   const color = fund.color;
 
   // Ring
-  const size = 240;
-  const strokeWidth = 10;
+  const size = 200;
+  const strokeWidth = 14;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - fund.ratio * circumference;
@@ -49,67 +52,71 @@ export default function MeterScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Gauge */}
-        <View style={styles.card}>
-          <View style={styles.ringContainer}>
-            <Svg width={size} height={size}>
-              <Circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke={Colors.border}
-                strokeWidth={strokeWidth}
-                fill="none"
-              />
-              <Circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke={color}
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={`${circumference}`}
-                strokeDashoffset={strokeDashoffset}
-                rotation="-90"
-                origin={`${size / 2}, ${size / 2}`}
-              />
-            </Svg>
-            <View style={styles.ringOverlay}>
-              <Text style={[styles.pctText, { color }]}>{pct}%</Text>
-            </View>
-          </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Page Title */}
+        <Text style={styles.pageTitle}>生活防衛資金</Text>
 
-          {/* Amounts */}
-          <Text style={styles.currentLabel}>
-            現在の現金残高：{toMan(fund.current)}
-          </Text>
-          <Text style={styles.targetLabel}>
-            目標：生活費{profile.targetDefenseMonths}ヶ月分 = {toMan(fund.target)}
-          </Text>
-
-          {/* Buttons */}
-          <View style={styles.buttonRow}>
-            <Pressable style={styles.updateButton} onPress={() => setShowBalanceModal(true)}>
-              <Text style={styles.updateButtonText}>残高を更新する</Text>
-            </Pressable>
-            <Pressable style={styles.targetButton} onPress={() => setShowTargetModal(true)}>
-              <Text style={styles.targetButtonText}>目標月数を変更</Text>
-            </Pressable>
+        {/* Circular Progress */}
+        <View style={styles.ringSection}>
+          <Svg width={size} height={size}>
+            <Circle
+              cx={size / 2} cy={size / 2} r={radius}
+              stroke={Colors.border} strokeWidth={strokeWidth} fill="none" />
+            <Circle
+              cx={size / 2} cy={size / 2} r={radius}
+              stroke={color} strokeWidth={strokeWidth} fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${circumference}`}
+              strokeDashoffset={strokeDashoffset}
+              rotation="-90" origin={`${size / 2}, ${size / 2}`} />
+          </Svg>
+          <View style={styles.ringOverlay}>
+            <Text style={[styles.pctText, { color }]}>{pct}%</Text>
+            <Text style={styles.pctLabel}>達成率</Text>
           </View>
         </View>
 
-        {/* Status message */}
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>現在の残高</Text>
+            <Text style={styles.statAmount}>{toMan(fund.current)}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>目標金額</Text>
+            <Text style={styles.statAmount}>{toMan(fund.target)}</Text>
+          </View>
+        </View>
+
+        {/* Advice Card */}
         <View style={styles.adviceCard}>
+          <View style={styles.adviceAccent} />
           <Text style={styles.adviceText}>{fund.advice}</Text>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.buttonRow}>
+          <Button
+            title="残高を更新"
+            variant="primary"
+            size="lg"
+            onPress={() => setShowBalanceModal(true)}
+            style={styles.flex1}
+          />
+          <Button
+            title="目標を変更"
+            variant="secondary"
+            size="lg"
+            onPress={() => setShowTargetModal(true)}
+            style={styles.flex1}
+          />
         </View>
 
         {/* Simulation */}
         {fund.simulation && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>達成シミュレーション</Text>
+          <View style={styles.simCard}>
+            <Text style={styles.simTitle}>達成シミュレーション</Text>
             <Text style={styles.simText}>
               月{formatNumber(fund.simulation.monthlySaving)}円積立で{fund.simulation.months}ヶ月後達成
             </Text>
@@ -131,9 +138,7 @@ export default function MeterScreen() {
               value={inputAmount}
               onChangeText={setInputAmount}
             />
-            <Pressable style={styles.modalSave} onPress={handleSaveBalance}>
-              <Text style={styles.modalSaveText}>保存</Text>
-            </Pressable>
+            <Button title="保存" variant="primary" size="lg" onPress={handleSaveBalance} />
             <Pressable onPress={() => setShowBalanceModal(false)}>
               <Text style={styles.modalCancel}>キャンセル</Text>
             </Pressable>
@@ -171,7 +176,7 @@ export default function MeterScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -182,31 +187,22 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    gap: 16,
+    gap: 20,
     paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 24,
     alignItems: 'center',
-    gap: 12,
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
   },
-  cardTitle: {
+  pageTitle: {
     fontFamily: 'Georgia',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 28,
+    fontWeight: '600',
     color: Colors.text,
+    lineHeight: 34,
+    letterSpacing: -0.3,
+    alignSelf: 'flex-start',
   },
-  ringContainer: {
-    width: 240,
-    height: 240,
+  ringSection: {
+    width: 200,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -216,60 +212,92 @@ const styles = StyleSheet.create({
   },
   pctText: {
     fontFamily: 'Georgia',
-    fontSize: 36,
-    fontWeight: '500',
+    fontSize: 48,
+    fontWeight: '700',
+    lineHeight: 52,
   },
-  currentLabel: {
-    fontSize: 15,
-    color: Colors.text,
-    marginTop: 8,
+  pctLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textTertiary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginTop: 2,
   },
-  targetLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  buttonRow: {
+  statsRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
+    gap: 12,
+    alignSelf: 'stretch',
   },
-  updateButton: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  updateButtonText: {
-    color: Colors.textOnBrand,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  targetButton: {
-    backgroundColor: Colors.buttonWarmSand,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  targetButtonText: {
-    color: Colors.buttonWarmSandText,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  adviceCard: {
+  statCard: {
+    flex: 1,
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
+    alignItems: 'center',
+    ...Shadows.sm,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textTertiary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  statAmount: {
+    fontFamily: 'Georgia',
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+    marginTop: 4,
+  },
+  adviceCard: {
+    backgroundColor: Colors.secondaryLight,
+    borderRadius: 16,
+    padding: 16,
+    paddingLeft: 24,
+    alignSelf: 'stretch',
+  },
+  adviceAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 12,
+    bottom: 12,
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.secondary,
   },
   adviceText: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
     lineHeight: 22,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignSelf: 'stretch',
+  },
+  flex1: {
+    flex: 1,
+  },
+  simCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    gap: 4,
+    ...Shadows.sm,
+  },
+  simTitle: {
+    fontFamily: 'Georgia',
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
   simText: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -277,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceElevated,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -285,30 +313,19 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontFamily: 'Georgia',
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: Colors.text,
   },
   modalInput: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: Colors.borderWarm,
+    borderColor: Colors.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: Colors.text,
-  },
-  modalSave: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  modalSaveText: {
-    color: Colors.textOnBrand,
-    fontSize: 15,
-    fontWeight: '700',
   },
   modalCancel: {
     color: Colors.textSecondary,
@@ -336,6 +353,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   monthOptionTextActive: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
   },
 });

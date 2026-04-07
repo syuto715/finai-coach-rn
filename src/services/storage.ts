@@ -5,6 +5,8 @@ import type { Subscription } from '../models/subscription';
 import type { ExecutionRecord } from '../models/execution-record';
 import type { UserProfile } from '../models/user-profile';
 import type { ExpenseCategory } from '../models/category';
+import type { Challenge } from '../models/challenge';
+import type { SavingsAchievement } from '../models/savings-achievement';
 
 const KEYS = {
   PROFILE: '@finai_profile',
@@ -13,6 +15,8 @@ const KEYS = {
   SUBSCRIPTIONS: '@finai_subscriptions',
   EXECUTIONS: '@finai_executions',
   CATEGORIES: '@finai_categories',
+  CHALLENGE: '@finai_challenge',
+  SAVINGS: '@finai_savings',
 } as const;
 
 // ── Generic helpers ─────────────────────────────────────────────────────────
@@ -111,6 +115,26 @@ export async function loadCategories(): Promise<ExpenseCategory[]> {
 
 export async function saveCategories(categories: ExpenseCategory[]): Promise<void> {
   return saveArray(KEYS.CATEGORIES, categories);
+}
+
+// ── Challenge ───────────────────────────────────────────────────────────────
+
+export async function loadChallenge(): Promise<Challenge | null> {
+  return loadObject<Challenge>(KEYS.CHALLENGE);
+}
+
+export async function saveChallenge(challenge: Challenge): Promise<void> {
+  return saveObject(KEYS.CHALLENGE, challenge);
+}
+
+// ── Savings Achievements ────────────────────────────────────────────────────
+
+export async function loadSavings(): Promise<SavingsAchievement[]> {
+  return loadArray<SavingsAchievement>(KEYS.SAVINGS);
+}
+
+export async function saveSavings(savings: SavingsAchievement[]): Promise<void> {
+  return saveArray(KEYS.SAVINGS, savings);
 }
 
 // ── Delete helpers ──────────────────────────────────────────────────────────

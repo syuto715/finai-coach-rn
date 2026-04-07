@@ -1,30 +1,45 @@
 export const Colors = {
+  // Brand
   primary: '#1B5E20',
-  primaryLight: '#4CAF50',
+  primaryLight: '#E8F5E9',
   secondary: '#c96442',
-  secondaryLight: '#d97757',
+  secondaryLight: '#FDEEE8',
+  secondaryDark: '#a8522f',
 
+  // Background (3 layers)
   background: '#f5f4ed',
   surface: '#faf9f5',
-  surfaceWhite: '#ffffff',
+  surfaceElevated: '#ffffff',
 
-  text: '#141413',
+  // Text (4 levels)
+  text: '#1a1a19',
   textSecondary: '#5e5d59',
-  textTertiary: '#87867f',
-  textOnBrand: '#faf9f5',
+  textTertiary: '#9e9d97',
+  textQuaternary: '#c4c3bc',
+  textOnBrand: '#ffffff',
 
-  border: '#f0eee6',
-  borderWarm: '#e8e6dc',
+  // Borders & separators
+  border: '#eeedeb',
+  borderStrong: '#dddcd6',
 
-  ring: '#d1cfc5',
-  error: '#b53333',
-  warning: '#F9A825',
-  success: '#2E7D32',
+  // Status
+  success: '#16a34a',
+  successLight: '#dcfce7',
+  warning: '#d97706',
+  warningLight: '#fef3c7',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
 
-  trustHigh: '#2E7D32',
-  trustMedium: '#F9A825',
-  trustLow: '#87867f',
+  // Trust
+  trustHigh: '#16a34a',
+  trustMedium: '#d97706',
+  trustLow: '#9e9d97',
 
-  buttonWarmSand: '#e8e6dc',
-  buttonWarmSandText: '#4d4c48',
+  // Tab & nav
+  tabActive: '#c96442',
+  tabInactive: '#9e9d97',
+
+  // Shadow
+  shadowLight: 'rgba(0,0,0,0.04)',
+  shadowMedium: 'rgba(0,0,0,0.08)',
 } as const;

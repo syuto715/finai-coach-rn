@@ -1,59 +1,80 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../../src/constants/colors';
+
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  return (
+    <View style={styles.iconContainer}>
+      <Text style={[styles.icon, { opacity: focused ? 1 : 0.5 }]}>{emoji}</Text>
+      {focused && <View style={styles.activeDot} />}
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.background },
-        headerTitleStyle: { fontFamily: 'Georgia', fontWeight: '500', color: Colors.text },
-        tabBarActiveTintColor: Colors.secondary,
-        tabBarInactiveTintColor: Colors.textTertiary,
+        headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: Colors.surfaceElevated,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'ホーム',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏠</Text>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="analysis"
         options={{
-          title: '分析',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📊</Text>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="subscriptions"
         options={{
-          title: 'サブスク',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔄</Text>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔄" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="meter"
         options={{
-          title: 'メーター',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🎯" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: '履歴',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  icon: {
+    fontSize: 22,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.secondary,
+  },
+});

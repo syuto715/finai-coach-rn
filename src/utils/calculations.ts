@@ -55,10 +55,10 @@ export function fixedCostScore(fixedTotal: number, totalExpense: number, monthly
 
 /** Score color based on score value */
 export function scoreColor(score: number): string {
-  if (score >= 90) return '#2E7D32';
-  if (score >= 70) return '#F9A825';
+  if (score >= 90) return '#16a34a';
+  if (score >= 70) return '#d97706';
   if (score >= 40) return '#c96442';
-  return '#b53333';
+  return '#dc2626';
 }
 
 /** Emergency fund progress ratio (0..1) */
@@ -69,9 +69,9 @@ export function fundProgressRatio(current: number, target: number): number {
 
 /** Meter color based on ratio */
 export function meterColor(ratio: number): string {
-  if (ratio > 0.8) return '#2E7D32';
-  if (ratio > 0.5) return '#F9A825';
-  return '#b53333';
+  if (ratio > 0.8) return '#16a34a';
+  if (ratio > 0.5) return '#d97706';
+  return '#dc2626';
 }
 
 /** Emergency fund advice text */
@@ -145,12 +145,12 @@ export function diagnosisAdvice(rank: string): string {
 /** Diagnosis rank color */
 export function diagnosisRankColor(rank: string): string {
   switch (rank) {
-    case 'S': return '#2E7D32';
+    case 'S': return '#16a34a';
     case 'A': return '#1B5E20';
-    case 'B': return '#F9A825';
+    case 'B': return '#d97706';
     case 'C': return '#c96442';
-    case 'D': return '#b53333';
-    default: return '#141413';
+    case 'D': return '#dc2626';
+    default: return '#1a1a19';
   }
 }
 

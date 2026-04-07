@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
+import { Shadows } from '../../src/constants/shadows';
 import { loadProfile, saveProfile } from '../../src/services/storage';
+import { Button } from '../../src/components/Button';
 import {
   diagnosisScore,
   diagnosisRank,
@@ -63,6 +65,7 @@ export default function DiagnosisScreen() {
   const [subs, setSubs] = useState<'0-2' | '3-5' | '6+'>('0-2');
   const [fund, setFund] = useState<'<1' | '1-3' | '3-6' | '6+'>('<1');
   const [showResult, setShowResult] = useState(false);
+  const rankAnim = useRef(new Animated.Value(0)).current;
 
   const score = diagnosisScore(income, rent, saving, subs, fund);
   const rank = diagnosisRank(score);
@@ -73,7 +76,6 @@ export default function DiagnosisScreen() {
   const handleSelect = useCallback((value: any, index: number) => {
     setSelectedIndex(index);
 
-    // Store the answer
     switch (currentQuestion) {
       case 0: setIncome(value); break;
       case 1: setRent(value); break;
@@ -82,16 +84,21 @@ export default function DiagnosisScreen() {
       case 4: setFund(value); break;
     }
 
-    // Auto-advance after 0.5s
     setTimeout(() => {
       setSelectedIndex(null);
       if (currentQuestion < 4) {
         setCurrentQuestion(currentQuestion + 1);
       } else {
         setShowResult(true);
+        Animated.spring(rankAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 8,
+          bounciness: 12,
+        }).start();
       }
-    }, 500);
-  }, [currentQuestion]);
+    }, 400);
+  }, [currentQuestion, rankAnim]);
 
   const handleFinish = async () => {
     const existing = await loadProfile();
@@ -116,13 +123,27 @@ export default function DiagnosisScreen() {
   if (showResult) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.resultContent}>
-        <Text style={[styles.rankText, { color: rankColor }]}>{rank}</Text>
+        <Animated.Text style={[
+          styles.rankText,
+          { color: rankColor },
+          { transform: [{ scale: rankAnim }] },
+        ]}>
+          {rank}
+        </Animated.Text>
         <Text style={styles.typeText}>{type}</Text>
-        <Text style={styles.adviceText}>{advice}</Text>
 
-        <Pressable style={styles.startButton} onPress={handleFinish}>
-          <Text style={styles.startButtonText}>始める</Text>
-        </Pressable>
+        <View style={styles.adviceCard}>
+          <View style={styles.adviceAccent} />
+          <Text style={styles.adviceText}>{advice}</Text>
+        </View>
+
+        <Button
+          title="始める"
+          variant="primary"
+          size="lg"
+          onPress={handleFinish}
+          style={styles.startButton}
+        />
       </ScrollView>
     );
   }
@@ -131,14 +152,14 @@ export default function DiagnosisScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Progress dots */}
+      {/* Progress bar */}
       <View style={styles.progress}>
         {questions.map((_, i) => (
           <View
             key={i}
             style={[
-              styles.progressDot,
-              { backgroundColor: currentQuestion >= i ? Colors.secondary : Colors.borderWarm },
+              styles.progressBar,
+              { backgroundColor: currentQuestion >= i ? Colors.secondary : Colors.border },
             ]}
           />
         ))}
@@ -180,12 +201,13 @@ const styles = StyleSheet.create({
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     paddingTop: 60,
     paddingBottom: 24,
+    paddingHorizontal: 24,
   },
-  progressDot: {
-    width: 40,
+  progressBar: {
+    flex: 1,
     height: 4,
     borderRadius: 2,
   },
@@ -196,27 +218,28 @@ const styles = StyleSheet.create({
   },
   questionTitle: {
     fontFamily: 'Georgia',
-    fontSize: 22,
-    fontWeight: '500',
+    fontSize: 24,
+    fontWeight: '600',
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 32,
-    lineHeight: 26,
+    lineHeight: 30,
   },
   options: {
     gap: 12,
   },
   optionButton: {
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
+    height: 56,
     paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.sm,
   },
   optionSelected: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.secondaryLight,
+    borderWidth: 1.5,
     borderColor: Colors.secondary,
   },
   optionText: {
@@ -225,44 +248,50 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   optionTextSelected: {
-    color: Colors.textOnBrand,
+    color: Colors.secondary,
   },
   resultContent: {
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 120,
+    paddingTop: 100,
     paddingBottom: 60,
+    gap: 16,
   },
   rankText: {
     fontFamily: 'Georgia',
     fontSize: 64,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   typeText: {
     fontFamily: 'Georgia',
-    fontSize: 22,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: Colors.text,
-    marginTop: 12,
+  },
+  adviceCard: {
+    backgroundColor: Colors.secondaryLight,
+    borderRadius: 16,
+    padding: 20,
+    paddingLeft: 24,
+    width: '100%',
+  },
+  adviceAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 16,
+    bottom: 16,
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.secondary,
   },
   adviceText: {
     fontSize: 15,
     color: Colors.textSecondary,
+    lineHeight: 22,
     textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 24,
   },
   startButton: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 14,
-    paddingVertical: 16,
     width: '100%',
-    alignItems: 'center',
-    marginTop: 48,
-  },
-  startButtonText: {
-    color: Colors.textOnBrand,
-    fontSize: 16,
-    fontWeight: '700',
+    marginTop: 16,
   },
 });

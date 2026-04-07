@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.borderWarm,
+    borderColor: Colors.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.borderWarm,
+    borderColor: Colors.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 16,
   },
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   categoryLabelActive: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontWeight: '700',
   },
   saveButton: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   saveText: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
   },

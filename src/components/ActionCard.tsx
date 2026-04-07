@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Alert, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import type { ActionProposal } from '../models/action-proposal';
 import { Colors } from '../constants/colors';
+import { Shadows } from '../constants/shadows';
 import { Strings } from '../constants/strings';
 import { TrustBadge } from './TrustBadge';
 
@@ -10,17 +11,24 @@ interface Props {
   proposal: ActionProposal;
   onDone?: () => void;
   onDetail?: () => void;
+  onSimulate?: () => void;
   compact?: boolean;
 }
 
-export function ActionCard({ proposal, onDone, onDetail, compact = false }: Props) {
+export function ActionCard({ proposal, onDone, onDetail, onSimulate, compact = false }: Props) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   const handleDone = () => {
     Alert.alert(Strings.confirmDone, '実行記録が保存されます。', [
       { text: Strings.cancel, style: 'cancel' },
       {
         text: Strings.actionDone,
         onPress: async () => {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Animated.sequence([
+            Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true, speed: 50 }),
+            Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 50 }),
+          ]).start();
           onDone?.();
         },
       },
@@ -28,14 +36,14 @@ export function ActionCard({ proposal, onDone, onDetail, compact = false }: Prop
   };
 
   return (
-    <View style={styles.card}>
+    <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
       <View style={styles.accentLine} />
       <View style={styles.cardContent}>
+        <TrustBadge level={proposal.trustLevel} />
         <Text style={styles.title}>{proposal.title}</Text>
         <Text style={styles.body} numberOfLines={compact ? 2 : 3}>
           {proposal.body}
         </Text>
-        <TrustBadge level={proposal.trustLevel} />
 
         {!compact && (
           <View style={styles.actions}>
@@ -46,84 +54,118 @@ export function ActionCard({ proposal, onDone, onDetail, compact = false }: Prop
             ) : (
               <>
                 {onDone && (
-                  <Pressable style={styles.doneButton} onPress={handleDone}>
-                    <Text style={styles.doneButtonText}>{Strings.actionDone}</Text>
-                  </Pressable>
+                  <DoneButton onPress={handleDone} />
                 )}
                 {onDetail && (
-                  <Pressable onPress={onDetail}>
-                    <Text style={styles.detailLink}>詳細を見る</Text>
+                  <Pressable style={styles.ghostButton} onPress={onDetail}>
+                    <Text style={styles.ghostButtonText}>詳しく</Text>
                   </Pressable>
                 )}
               </>
             )}
           </View>
         )}
+
+        {!compact && onSimulate && !proposal.isExecuted && (
+          <Pressable onPress={onSimulate}>
+            <Text style={styles.simulateLink}>💰 節約効果を見る</Text>
+          </Pressable>
+        )}
       </View>
-    </View>
+    </Animated.View>
+  );
+}
+
+function DoneButton({ onPress }: { onPress: () => void }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  return (
+    <Animated.View style={[styles.doneButtonWrap, { transform: [{ scale }] }]}>
+      <Pressable
+        style={styles.doneButton}
+        onPress={onPress}
+        onPressIn={() => {
+          Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+        }}
+        onPressOut={() => {
+          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+        }}
+      >
+        <Text style={styles.doneButtonText}>{Strings.actionDone}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.secondaryLight,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
+    ...Shadows.md,
   },
   accentLine: {
-    height: 4,
+    position: 'absolute',
+    left: 0,
+    top: 16,
+    bottom: 16,
+    width: 4,
+    borderRadius: 2,
     backgroundColor: Colors.secondary,
   },
   cardContent: {
     padding: 20,
-    gap: 12,
+    paddingLeft: 24,
+    gap: 10,
   },
   title: {
     fontFamily: 'Georgia',
-    fontSize: 22,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: Colors.text,
     lineHeight: 26,
   },
   body: {
     fontSize: 15,
     color: Colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: 22,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
     marginTop: 4,
+  },
+  doneButtonWrap: {
+    flex: 2,
   },
   doneButton: {
     backgroundColor: Colors.secondary,
     borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    flex: 1,
+    height: 52,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   doneButtonText: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
-  detailLink: {
-    color: Colors.primary,
-    fontSize: 13,
+  ghostButton: {
+    flex: 1,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ghostButtonText: {
+    color: Colors.secondary,
+    fontSize: 15,
     fontWeight: '600',
   },
   doneBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(46,125,50,0.10)',
+    backgroundColor: Colors.successLight,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -133,5 +175,10 @@ const styles = StyleSheet.create({
     color: Colors.success,
     fontWeight: '700',
     fontSize: 13,
+  },
+  simulateLink: {
+    color: Colors.secondary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

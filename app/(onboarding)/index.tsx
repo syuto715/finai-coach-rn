@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { saveProfile } from '../../src/services/storage';
 import { defaultProfile } from '../../src/models/user-profile';
+import { Button } from '../../src/components/Button';
 
 const { width } = Dimensions.get('window');
 
@@ -58,21 +59,26 @@ export default function OnboardingIntro() {
         }}
         renderItem={({ item, index }) => (
           <View style={styles.slide}>
-            <Text style={styles.emoji}>{item.emoji}</Text>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.sub}>{item.sub}</Text>
+            <View style={styles.slideTop}>
+              <Text style={styles.emoji}>{item.emoji}</Text>
+            </View>
+            <View style={styles.slideBottom}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.sub}>{item.sub}</Text>
 
-            {index === slides.length - 1 && (
-              <TextInput
-                style={styles.input}
-                placeholder="ニックネームを入力"
-                placeholderTextColor={Colors.textTertiary}
-                value={nickname}
-                onChangeText={setNickname}
-                returnKeyType="done"
-                maxLength={20}
-              />
-            )}
+              {index === slides.length - 1 && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="ニックネームを入力"
+                  placeholderTextColor={Colors.textTertiary}
+                  value={nickname}
+                  onChangeText={setNickname}
+                  returnKeyType="done"
+                  maxLength={20}
+                  textAlign="center"
+                />
+              )}
+            </View>
           </View>
         )}
       />
@@ -86,13 +92,16 @@ export default function OnboardingIntro() {
 
       {/* Button */}
       {isLastSlide ? (
-        <Pressable
-          style={[styles.button, !nickname.trim() && styles.buttonDisabled]}
-          onPress={handleStart}
-          disabled={!nickname.trim()}
-        >
-          <Text style={styles.buttonText}>診断を始める</Text>
-        </Pressable>
+        <View style={styles.buttonContainer}>
+          <Button
+            title="診断を始める"
+            variant="primary"
+            size="lg"
+            onPress={handleStart}
+            disabled={!nickname.trim()}
+            style={styles.startButton}
+          />
+        </View>
       ) : (
         <View style={styles.buttonPlaceholder} />
       )}
@@ -109,40 +118,47 @@ const styles = StyleSheet.create({
   slide: {
     width,
     flex: 1,
+  },
+  slideTop: {
+    flex: 1,
+    backgroundColor: Colors.secondaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slideBottom: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
   },
   emoji: {
-    fontSize: 64,
-    marginBottom: 24,
+    fontSize: 80,
   },
   title: {
     fontFamily: 'Georgia',
-    fontSize: 26,
-    fontWeight: '500',
+    fontSize: 28,
+    fontWeight: '600',
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 8,
-    lineHeight: 31,
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
   sub: {
-    fontSize: 15,
+    fontSize: 17,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 26,
   },
   input: {
     width: '100%',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.borderWarm,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.secondary,
     paddingVertical: 12,
-    fontSize: 16,
+    fontSize: 20,
     marginTop: 24,
     color: Colors.text,
+    textAlign: 'center',
   },
   dots: {
     flexDirection: 'row',
@@ -154,29 +170,20 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.borderWarm,
+    backgroundColor: Colors.borderStrong,
   },
   dotActive: {
     backgroundColor: Colors.secondary,
     width: 24,
   },
-  button: {
-    backgroundColor: Colors.secondary,
-    marginHorizontal: 24,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
+  buttonContainer: {
+    marginHorizontal: 20,
   },
-  buttonDisabled: {
-    opacity: 0.4,
-  },
-  buttonText: {
-    color: Colors.textOnBrand,
-    fontSize: 16,
-    fontWeight: '700',
+  startButton: {
+    width: '100%',
   },
   buttonPlaceholder: {
     height: 52,
-    marginHorizontal: 24,
+    marginHorizontal: 20,
   },
 });

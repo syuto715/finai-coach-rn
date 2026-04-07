@@ -3,9 +3,11 @@ import { View, Text, TextInput, Pressable, Switch, StyleSheet, ScrollView } from
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../src/constants/colors';
+import { Shadows } from '../src/constants/shadows';
 import { Strings } from '../src/constants/strings';
 import { useExpenses } from '../src/hooks/useExpenses';
 import { useCategories } from '../src/hooks/useCategories';
+import { Button } from '../src/components/Button';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -38,78 +40,84 @@ export default function AddExpenseScreen() {
     router.back();
   };
 
+  const displayAmount = amount ? `¥${parseInt(amount, 10).toLocaleString('ja-JP')}` : '';
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Amount */}
-      <View style={styles.amountSection}>
-        <Text style={styles.yen}>¥</Text>
-        <TextInput
-          style={styles.amountInput}
-          placeholder="0"
-          placeholderTextColor={Colors.textTertiary}
-          keyboardType="number-pad"
-          value={amount}
-          onChangeText={setAmount}
-          autoFocus
-        />
-      </View>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Amount Display */}
+        <View style={styles.amountSection}>
+          <Text style={styles.yenPrefix}>¥</Text>
+          <TextInput
+            style={styles.amountInput}
+            placeholder="0"
+            placeholderTextColor={Colors.textQuaternary}
+            keyboardType="number-pad"
+            value={amount}
+            onChangeText={setAmount}
+            autoFocus
+          />
+        </View>
 
-      {/* Category */}
-      <Text style={styles.sectionLabel}>カテゴリ</Text>
-      <View style={styles.categoryGrid}>
-        {categories.map((c) => (
-          <Pressable
-            key={c.id}
-            style={[styles.categoryButton, category === c.id && styles.categoryActive]}
-            onPress={() => setCategory(c.id)}
-          >
-            <Text style={styles.categoryEmoji}>{c.emoji}</Text>
-            <Text
-              style={[styles.categoryLabel, category === c.id && styles.categoryLabelActive]}
+        {/* Category Grid */}
+        <Text style={styles.sectionLabel}>カテゴリ</Text>
+        <View style={styles.categoryGrid}>
+          {categories.map((c) => (
+            <Pressable
+              key={c.id}
+              style={[styles.categoryButton, category === c.id && styles.categoryActive]}
+              onPress={() => setCategory(c.id)}
             >
-              {c.name}
-            </Text>
+              <Text style={styles.categoryEmoji}>{c.emoji}</Text>
+              <Text
+                style={[styles.categoryLabel, category === c.id && styles.categoryLabelActive]}
+              >
+                {c.name}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable
+            style={styles.editCategoryButton}
+            onPress={() => router.push('/manage-categories')}
+          >
+            <Text style={styles.editEmoji}>✏️</Text>
+            <Text style={styles.editLabel}>追加/編集</Text>
           </Pressable>
-        ))}
-        {/* Edit categories button */}
-        <Pressable
-          style={styles.editCategoryButton}
-          onPress={() => router.push('/manage-categories')}
-        >
-          <Text style={styles.editCategoryEmoji}>✏️</Text>
-          <Text style={styles.editCategoryLabel}>追加/編集</Text>
-        </Pressable>
-      </View>
+        </View>
 
-      {/* Label */}
-      <Text style={styles.sectionLabel}>ラベル（任意）</Text>
-      <TextInput
-        style={styles.textInput}
-        placeholder="例：スーパー、電気代"
-        placeholderTextColor={Colors.textTertiary}
-        value={label}
-        onChangeText={setLabel}
-      />
+        {/* Label */}
+        <Text style={styles.sectionLabel}>メモ（任意）</Text>
+        <TextInput
+          style={styles.memoInput}
+          placeholder="例：スーパー、電気代"
+          placeholderTextColor={Colors.textTertiary}
+          value={label}
+          onChangeText={setLabel}
+        />
 
-      {/* Fixed toggle */}
-      <View style={styles.toggleRow}>
-        <Text style={styles.toggleLabel}>固定費として記録</Text>
-        <Switch
-          value={isFixed}
-          onValueChange={setIsFixed}
-          trackColor={{ true: Colors.primary, false: Colors.borderWarm }}
+        {/* Fixed toggle */}
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>固定費として記録</Text>
+          <Switch
+            value={isFixed}
+            onValueChange={setIsFixed}
+            trackColor={{ true: Colors.primary, false: Colors.borderStrong }}
+          />
+        </View>
+      </ScrollView>
+
+      {/* Save Button - Fixed at bottom */}
+      <View style={styles.bottomBar}>
+        <Button
+          title={Strings.save}
+          variant="primary"
+          size="lg"
+          onPress={handleSave}
+          disabled={!amount || parseInt(amount) <= 0}
+          style={styles.saveButton}
         />
       </View>
-
-      {/* Save */}
-      <Pressable
-        style={[styles.saveButton, (!amount || parseInt(amount) <= 0) && styles.saveDisabled]}
-        onPress={handleSave}
-        disabled={!amount || parseInt(amount) <= 0}
-      >
-        <Text style={styles.saveText}>{Strings.save}</Text>
-      </Pressable>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -121,31 +129,36 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     gap: 20,
+    paddingBottom: 100,
   },
   amountSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 16,
+    paddingVertical: 20,
   },
-  yen: {
-    fontSize: 32,
+  yenPrefix: {
+    fontSize: 28,
     fontWeight: '300',
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
   },
   amountInput: {
     fontFamily: 'Georgia',
     fontSize: 48,
-    fontWeight: '500',
+    fontWeight: '700',
     color: Colors.text,
     minWidth: 120,
     textAlign: 'center',
+    lineHeight: 52,
+    letterSpacing: -1,
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -154,50 +167,50 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     width: '30%',
-    backgroundColor: Colors.border,
-    borderRadius: 12,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     gap: 4,
+    ...Shadows.sm,
   },
   categoryActive: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.secondaryLight,
+    borderWidth: 1.5,
+    borderColor: Colors.secondary,
   },
   categoryEmoji: {
-    fontSize: 20,
+    fontSize: 24,
   },
   categoryLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
   },
   categoryLabelActive: {
-    color: Colors.textOnBrand,
-    fontWeight: '700',
+    color: Colors.secondary,
+    fontWeight: '600',
   },
   editCategoryButton: {
     width: '30%',
-    backgroundColor: Colors.border,
-    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     gap: 4,
     borderWidth: 1,
-    borderColor: Colors.borderWarm,
+    borderColor: Colors.borderStrong,
     borderStyle: 'dashed',
   },
-  editCategoryEmoji: {
-    fontSize: 20,
+  editEmoji: {
+    fontSize: 24,
   },
-  editCategoryLabel: {
-    fontSize: 12,
+  editLabel: {
+    fontSize: 13,
     color: Colors.textSecondary,
   },
-  textInput: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.borderWarm,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+  memoInput: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderStrong,
     paddingVertical: 12,
     fontSize: 15,
     color: Colors.text,
@@ -208,21 +221,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleLabel: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.text,
   },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    paddingBottom: 36,
+    backgroundColor: Colors.background,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
   saveButton: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  saveDisabled: {
-    opacity: 0.4,
-  },
-  saveText: {
-    color: Colors.textOnBrand,
-    fontSize: 16,
-    fontWeight: '700',
+    width: '100%',
   },
 });

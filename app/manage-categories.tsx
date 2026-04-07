@@ -174,7 +174,7 @@ export default function ManageCategoriesScreen() {
               <Switch
                 value={isFixed}
                 onValueChange={setIsFixed}
-                trackColor={{ true: Colors.primary, false: Colors.borderWarm }}
+                trackColor={{ true: Colors.primary, false: Colors.borderStrong }}
               />
             </View>
 
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   modalInput: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.borderWarm,
+    borderColor: Colors.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   saveText: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
   },

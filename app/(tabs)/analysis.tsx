@@ -1,23 +1,24 @@
 import React, { useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import { Colors } from '../../src/constants/colors';
-import { Strings } from '../../src/constants/strings';
+import { Shadows } from '../../src/constants/shadows';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useExpenses } from '../../src/hooks/useExpenses';
 import { useCategories } from '../../src/hooks/useCategories';
 import { FixedCostScore } from '../../src/components/FixedCostScore';
-import { EvidenceCard } from '../../src/components/EvidenceCard';
+import { SectionHeader } from '../../src/components/SectionHeader';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
+import { EmptyState } from '../../src/components/EmptyState';
 import { formatNumber } from '../../src/utils/calculations';
-import { evidenceSources } from '../../src/constants/evidence-sources';
 
 const screenWidth = Dimensions.get('window').width - 80;
 
 const chartColors = [
-  Colors.primary, '#2196F3', Colors.secondary, Colors.error,
-  '#9C27B0', '#00BCD4', '#795548', '#607D8B',
+  Colors.secondary, '#2196F3', Colors.primary, '#9C27B0',
+  '#00BCD4', '#795548', '#607D8B', Colors.warning,
 ];
 
 export default function AnalysisScreen() {
@@ -51,7 +52,7 @@ export default function AnalysisScreen() {
     datasets: [{ data: past3.map((m) => m.total || 0) }],
   };
 
-  // Pie data - use dynamic category names
+  // Pie data
   const catEntries = Object.entries(categoryTotals)
     .filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a);
@@ -64,101 +65,94 @@ export default function AnalysisScreen() {
     legendFontSize: 11,
   }));
 
-  // Fixed cost list
-  const fixedExpenses = currentMonthExpenses.filter((e) => e.isFixed);
-
-  const src = evidenceSources.soumu_kakei_2026_01;
+  const hasData = totalThisMonth > 0 || expenses.length > 0;
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Fixed Cost Score */}
-        <FixedCostScore
-          fixedTotal={fixedThisMonth}
-          totalExpense={totalThisMonth}
-          monthlyIncome={profile.monthlyIncome}
-        />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Page Title */}
+        <Text style={styles.pageTitle}>分析</Text>
 
-        {/* Bar Chart */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>過去3ヶ月の推移</Text>
-          {past3.some((m) => m.total > 0) ? (
-            <BarChart
-              data={barData}
-              width={screenWidth}
-              height={180}
-              yAxisLabel="¥"
-              yAxisSuffix=""
-              chartConfig={{
-                backgroundColor: Colors.surface,
-                backgroundGradientFrom: Colors.surface,
-                backgroundGradientTo: Colors.surface,
-                decimalPlaces: 0,
-                color: () => Colors.primary,
-                labelColor: () => Colors.textSecondary,
-                barPercentage: 0.6,
-              }}
-              style={{ borderRadius: 12 }}
+        {!hasData ? (
+          <EmptyState
+            emoji="📊"
+            title="まだデータがありません"
+            description="支出を記録すると分析が表示されます"
+          />
+        ) : (
+          <>
+            {/* Fixed Cost Score */}
+            <FixedCostScore
+              fixedTotal={fixedThisMonth}
+              totalExpense={totalThisMonth}
+              monthlyIncome={profile.monthlyIncome}
             />
-          ) : (
-            <Text style={styles.emptyText}>データがありません</Text>
-          )}
-        </View>
 
-        {/* Pie Chart */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{Strings.byCategory}</Text>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>{Strings.totalExpense}</Text>
-            <Text style={styles.totalValue}>¥{formatNumber(totalThisMonth)}</Text>
-          </View>
-          {pieData.length > 0 ? (
-            <PieChart
-              data={pieData}
-              width={screenWidth}
-              height={200}
-              accessor="amount"
-              backgroundColor="transparent"
-              paddingLeft="15"
-              chartConfig={{
-                color: () => Colors.primary,
-              }}
-            />
-          ) : (
-            <Text style={styles.emptyText}>データがありません</Text>
-          )}
-        </View>
-
-        {/* Fixed Cost List */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>固定費一覧</Text>
-          {fixedExpenses.length === 0 ? (
-            <Text style={styles.emptyText}>固定費データがありません</Text>
-          ) : (
-            <>
+            {/* Category Spending */}
+            <View style={styles.card}>
+              <SectionHeader title="カテゴリ別支出" />
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>固定費合計</Text>
-                <Text style={styles.totalValue}>¥{formatNumber(fixedThisMonth)}</Text>
+                <Text style={styles.totalLabel}>今月の合計</Text>
+                <Text style={styles.totalValue}>¥{formatNumber(totalThisMonth)}</Text>
               </View>
-              {fixedExpenses.map((e) => (
-                <View key={e.id} style={styles.fixedRow}>
-                  <Text style={styles.fixedLabel}>{e.label || getCategoryName(e.category)}</Text>
-                  <Text style={styles.fixedAmount}>¥{formatNumber(e.amount)}</Text>
+              {pieData.length > 0 ? (
+                <PieChart
+                  data={pieData}
+                  width={screenWidth}
+                  height={200}
+                  accessor="amount"
+                  backgroundColor="transparent"
+                  paddingLeft="15"
+                  chartConfig={{
+                    color: () => Colors.primary,
+                  }}
+                />
+              ) : (
+                <Text style={styles.emptyText}>データがありません</Text>
+              )}
+              {/* Legend */}
+              {catEntries.map(([key, value], i) => (
+                <View key={key} style={styles.legendRow}>
+                  <View style={[styles.legendDot, { backgroundColor: chartColors[i % chartColors.length] }]} />
+                  <Text style={styles.legendName}>{getCategoryName(key)}</Text>
+                  <Text style={styles.legendAmount}>¥{formatNumber(value)}</Text>
+                  <Text style={styles.legendPct}>
+                    {Math.round((value / totalThisMonth) * 100)}%
+                  </Text>
                 </View>
               ))}
-            </>
-          )}
-        </View>
+            </View>
 
-        {/* Evidence */}
-        <EvidenceCard
-          sourceName={src.name}
-          publishedAt={src.publishedAt}
-          url={src.url}
-        />
+            {/* Spending Trend */}
+            <View style={styles.card}>
+              <SectionHeader title="過去の推移" />
+              {past3.some((m) => m.total > 0) ? (
+                <BarChart
+                  data={barData}
+                  width={screenWidth}
+                  height={180}
+                  yAxisLabel="¥"
+                  yAxisSuffix=""
+                  chartConfig={{
+                    backgroundColor: Colors.surface,
+                    backgroundGradientFrom: Colors.surface,
+                    backgroundGradientTo: Colors.surface,
+                    decimalPlaces: 0,
+                    color: (opacity, index) => index === 2 ? Colors.secondary : Colors.borderStrong,
+                    labelColor: () => Colors.textSecondary,
+                    barPercentage: 0.6,
+                  }}
+                  style={{ borderRadius: 12 }}
+                />
+              ) : (
+                <Text style={styles.emptyText}>データがありません</Text>
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
       <DisclaimerFooter />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -169,26 +163,23 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    gap: 16,
+    gap: 20,
     paddingBottom: 24,
+  },
+  pageTitle: {
+    fontFamily: 'Georgia',
+    fontSize: 28,
+    fontWeight: '600',
+    color: Colors.text,
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
     padding: 20,
     gap: 12,
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
-  },
-  cardTitle: {
-    fontFamily: 'Georgia',
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text,
+    ...Shadows.sm,
   },
   totalRow: {
     flexDirection: 'row',
@@ -196,13 +187,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
   },
   totalValue: {
     fontFamily: 'Georgia',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: Colors.text,
   },
   emptyText: {
@@ -210,20 +201,32 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     paddingVertical: 8,
   },
-  fixedRow: {
+  legendRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
   },
-  fixedLabel: {
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendName: {
+    flex: 1,
     fontSize: 14,
     color: Colors.text,
   },
-  fixedAmount: {
+  legendAmount: {
+    fontFamily: 'Georgia',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.text,
+  },
+  legendPct: {
+    fontSize: 13,
+    color: Colors.textTertiary,
+    width: 36,
+    textAlign: 'right',
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
+import { Shadows } from '../constants/shadows';
 
 interface Props {
   streak: number;
@@ -21,17 +22,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceElevated,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 4,
+    ...Shadows.sm,
   },
   fire: {
-    fontSize: 18,
+    fontSize: 16,
   },
   text: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

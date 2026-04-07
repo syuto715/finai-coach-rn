@@ -42,6 +42,26 @@ export default function RootLayout() {
             presentation: 'modal',
           }}
         />
+        <Stack.Screen
+          name="savings-simulator"
+          options={{
+            headerShown: true,
+            title: '節約シミュレーター',
+            headerTintColor: Colors.secondary,
+            headerStyle: { backgroundColor: Colors.background },
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="monthly-report"
+          options={{
+            headerShown: true,
+            title: '月次レポート',
+            headerTintColor: Colors.secondary,
+            headerStyle: { backgroundColor: Colors.background },
+            presentation: 'modal',
+          }}
+        />
       </Stack>
     </>
   );

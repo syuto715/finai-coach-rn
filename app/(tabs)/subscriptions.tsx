@@ -1,21 +1,32 @@
 import React, { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../src/constants/colors';
+import { Shadows } from '../../src/constants/shadows';
 import { Strings } from '../../src/constants/strings';
 import { useSubscriptions } from '../../src/hooks/useSubscriptions';
-import { CategoryIcon } from '../../src/components/CategoryIcon';
 import { DisclaimerFooter } from '../../src/components/DisclaimerFooter';
+import { EmptyState } from '../../src/components/EmptyState';
+import { Button } from '../../src/components/Button';
 import { formatNumber, formatDateJP } from '../../src/utils/calculations';
 import type { Subscription } from '../../src/models/subscription';
+
+const subCategoryEmoji: Record<string, string> = {
+  video: '🎬',
+  music: '🎵',
+  news: '📰',
+  tool: '🛠',
+  game: '🎮',
+  other: '📦',
+};
 
 export default function SubscriptionsScreen() {
   const router = useRouter();
   const {
     activeSubs,
     totalMonthly,
-    unusedSubs,
     updateLastUsed,
     deleteSubscription,
     reload: reloadSubscriptions,
@@ -40,34 +51,25 @@ export default function SubscriptionsScreen() {
 
   const renderItem = ({ item }: { item: Subscription }) => {
     const isUnused = !item.lastUsedDate || (Date.now() - new Date(item.lastUsedDate).getTime()) / 86400000 > 30;
+    const emoji = subCategoryEmoji[item.category] ?? '📦';
 
     return (
-      <Pressable style={styles.itemCard} onLongPress={() => handleDelete(item)}>
-        <View style={styles.itemHeader}>
-          <CategoryIcon category={item.category} size={36} />
+      <View style={styles.itemCard}>
+        <View style={styles.itemRow}>
+          <View style={styles.emojiCircle}>
+            <Text style={styles.emoji}>{emoji}</Text>
+          </View>
           <View style={styles.itemInfo}>
             <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemCategory}>
-              {Strings.subCategories[item.category] ?? item.category}
+            <Text style={styles.itemMeta}>
+              {item.lastUsedDate ? `最終利用: ${formatDateJP(item.lastUsedDate)}` : '未使用'}
             </Text>
           </View>
-          <Text style={styles.itemPrice}>¥{formatNumber(item.monthlyPrice)}/月</Text>
-        </View>
-
-        {item.lastUsedDate && (
-          <Text style={[styles.lastUsed, isUnused && styles.lastUsedWarning]}>
-            最後に使用: {formatDateJP(item.lastUsedDate)}
-          </Text>
-        )}
-
-        {isUnused && (
-          <View style={styles.unusedBadge}>
-            <Text style={styles.unusedText}>⚠️ 30日以上未使用</Text>
+          <View style={styles.itemRight}>
+            <Text style={styles.itemPrice}>¥{formatNumber(item.monthlyPrice)}</Text>
+            {isUnused && <View style={styles.redDot} />}
           </View>
-        )}
-
-        {item.memo ? <Text style={styles.memo}>{item.memo}</Text> : null}
-
+        </View>
         <View style={styles.actions}>
           <Pressable style={styles.usedButton} onPress={() => updateLastUsed(item.id)}>
             <Text style={styles.usedButtonText}>使った</Text>
@@ -76,39 +78,53 @@ export default function SubscriptionsScreen() {
             <Text style={styles.deleteButtonText}>削除</Text>
           </Pressable>
         </View>
-      </Pressable>
+      </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
         data={activeSubs}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={styles.totalCard}>
-            <Text style={styles.totalLabel}>月</Text>
-            <Text style={styles.totalMonthly}>¥{formatNumber(totalMonthly)}</Text>
-            <Text style={styles.totalAnnual}>/ 年 ¥{formatNumber(totalMonthly * 12)}</Text>
+          <View>
+            <Text style={styles.pageTitle}>サブスク</Text>
+            <View style={styles.totalCard}>
+              <View>
+                <Text style={styles.totalLabel}>月額合計</Text>
+                <Text style={styles.totalAmount}>¥{formatNumber(totalMonthly)}</Text>
+              </View>
+              <Text style={styles.totalAnnual}>年間 ¥{formatNumber(totalMonthly * 12)}</Text>
+            </View>
           </View>
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>サブスクを登録して棚卸ししましょう</Text>
-          </View>
+          <EmptyState
+            emoji="🔄"
+            title="サブスクを登録しましょう"
+            description="サブスクを登録して定期的に棚卸ししましょう"
+            ctaLabel="＋ サブスクを追加"
+            onCta={() => router.push('/add-subscription')}
+          />
         }
         ListFooterComponent={
-          <>
-            <Pressable style={styles.addButton} onPress={() => router.push('/add-subscription')}>
-              <Text style={styles.addButtonText}>{Strings.addSubscription}</Text>
-            </Pressable>
-          </>
+          activeSubs.length > 0 ? (
+            <Button
+              title={Strings.addSubscription}
+              variant="primary"
+              size="lg"
+              onPress={() => router.push('/add-subscription')}
+              style={styles.addBtn}
+            />
+          ) : null
         }
       />
       <DisclaimerFooter />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -122,141 +138,126 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 24,
   },
-  totalCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 20,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 4,
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
-  },
-  totalLabel: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  totalMonthly: {
+  pageTitle: {
     fontFamily: 'Georgia',
     fontSize: 28,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Colors.text,
+    lineHeight: 34,
+    letterSpacing: -0.3,
+    marginBottom: 16,
+  },
+  totalCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    ...Shadows.md,
+  },
+  totalLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textTertiary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  totalAmount: {
+    fontFamily: 'Georgia',
+    fontSize: 36,
+    fontWeight: '600',
+    color: Colors.text,
+    lineHeight: 40,
+    letterSpacing: -0.5,
+    marginTop: 2,
   },
   totalAnnual: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textTertiary,
-  },
-  unusedBadge: {
-    backgroundColor: 'rgba(249,168,37,0.10)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-  },
-  unusedText: {
-    fontSize: 12,
-    color: Colors.warning,
-    fontWeight: '600',
   },
   itemCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
-    gap: 8,
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
+    gap: 12,
+    ...Shadows.sm,
   },
-  itemHeader: {
+  itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  emojiCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoji: {
+    fontSize: 20,
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.text,
   },
-  itemCategory: {
-    fontSize: 11,
-    color: Colors.textSecondary,
+  itemMeta: {
+    fontSize: 13,
+    color: Colors.textTertiary,
+    marginTop: 2,
+  },
+  itemRight: {
+    alignItems: 'flex-end',
   },
   itemPrice: {
     fontFamily: 'Georgia',
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.secondary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
   },
-  lastUsed: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-  },
-  lastUsedWarning: {
-    color: Colors.warning,
-  },
-  memo: {
-    fontSize: 12,
-    color: Colors.textTertiary,
+  redDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.error,
+    marginTop: 4,
   },
   actions: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
   },
   usedButton: {
     borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderColor: Colors.borderStrong,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   usedButtonText: {
-    fontSize: 12,
-    color: Colors.primary,
-    fontWeight: '600',
+    fontSize: 13,
+    color: Colors.text,
+    fontWeight: '500',
   },
   deleteButton: {
     borderWidth: 1,
-    borderColor: Colors.error,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderColor: Colors.errorLight,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   deleteButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.error,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: Colors.textTertiary,
-  },
-  addButton: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
+  addBtn: {
     marginTop: 8,
-  },
-  addButtonText: {
-    color: Colors.textOnBrand,
-    fontSize: 15,
-    fontWeight: '700',
   },
 });

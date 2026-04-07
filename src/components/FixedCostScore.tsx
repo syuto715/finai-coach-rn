@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '../constants/colors';
+import { Shadows } from '../constants/shadows';
 import { fixedCostScore, scoreColor } from '../utils/calculations';
 
 interface Props {
@@ -16,7 +17,7 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
   const base = monthlyIncome > 0 ? monthlyIncome : totalExpense;
   const ratio = base > 0 ? Math.round((fixedTotal / base) * 100) : 0;
 
-  const size = 160;
+  const size = 180;
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -25,7 +26,6 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
   if (totalExpense === 0 && monthlyIncome === 0) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>固定費スコア</Text>
         <Text style={styles.emptyText}>データを記録するとスコアが表示されます</Text>
       </View>
     );
@@ -33,7 +33,6 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>固定費スコア</Text>
       <View style={styles.ringContainer}>
         <Svg width={size} height={size}>
           <Circle
@@ -70,27 +69,15 @@ export function FixedCostScore({ fixedTotal, totalExpense, monthlyIncome }: Prop
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceElevated,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 24,
-    shadowOpacity: 1,
-  },
-  title: {
-    fontFamily: 'Georgia',
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text,
-    marginBottom: 16,
+    ...Shadows.md,
   },
   ringContainer: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -100,12 +87,14 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontFamily: 'Georgia',
-    fontSize: 40,
-    fontWeight: '500',
+    fontSize: 48,
+    fontWeight: '700',
+    lineHeight: 52,
   },
   maxText: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textTertiary,
+    marginTop: 2,
   },
   comparison: {
     fontSize: 14,

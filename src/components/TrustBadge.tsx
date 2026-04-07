@@ -8,9 +8,9 @@ interface Props {
 }
 
 const config: Record<TrustLevel, { label: string; color: string; bg: string }> = {
-  high: { label: '信頼度：高', color: Colors.trustHigh, bg: 'rgba(46,125,50,0.10)' },
-  medium: { label: '信頼度：中', color: Colors.trustMedium, bg: 'rgba(249,168,37,0.10)' },
-  low: { label: '信頼度：低', color: Colors.trustLow, bg: 'rgba(135,134,127,0.10)' },
+  high: { label: '信頼度：高', color: Colors.trustHigh, bg: Colors.successLight },
+  medium: { label: '信頼度：中', color: Colors.trustMedium, bg: Colors.warningLight },
+  low: { label: '信頼度：低', color: Colors.trustLow, bg: 'rgba(158,157,151,0.12)' },
 };
 
 export function TrustBadge({ level }: Props) {

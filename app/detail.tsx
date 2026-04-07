@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButtonText: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontWeight: '700',
   },
   headerBar: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneButtonText: {
-    color: Colors.textOnBrand,
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '800',
   },
